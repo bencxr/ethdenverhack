@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "./interfaces/IYieldVault.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "./interfaces/IMOREMarkets.sol";
 
 /**
  * @title HODLJar
  * @dev Contract representing a single HODL jar for a foster kid
  */
-contract HODLJar {
+contract HODLJar is ReentrancyGuard {
     struct Kid {
         string name;
         string story;
@@ -22,14 +24,17 @@ contract HODLJar {
     // Single kid instance
     Kid public kid;
     
-    // Yield vault contract
-    IYieldVault public yieldVault;
+    // USDC token contract
+    IERC20 public immutable usdc;
+    
+    // MORE Markets contract
+    IMOREMarkets public immutable moreMarkets;
     
     // Minimum lock period in years
     uint256 public constant MIN_LOCK_PERIOD = 1;
     
-    // Fixed donation amount (in Flow tokens, 1000 with 18 decimals)
-    uint256 public constant DONATION_AMOUNT = 1000 * 10**18;
+    // Fixed donation amount (in USDC, 1000 with 6 decimals)
+    uint256 public constant DONATION_AMOUNT = 1000 * 10**6;
     
     // Events
     event KidCreated(string name, address fosterHome, uint256 age);
@@ -39,7 +44,8 @@ contract HODLJar {
     
     /**
      * @dev Constructor to initialize the HODL jar
-     * @param _yieldVault Address of the yield vault contract
+     * @param _usdc Address of the USDC token contract
+     * @param _moreMarkets Address of the MORE Markets contract
      * @param _name Kid's name
      * @param _story Kid's story
      * @param _age Kid's age
@@ -47,20 +53,23 @@ contract HODLJar {
      * @param _lockPeriodInYears Period in years until principal can be withdrawn
      */
     constructor(
-        address _yieldVault,
+        address _usdc,
+        address _moreMarkets,
         string memory _name,
         string memory _story,
         uint256 _age,
         address _fosterHome,
         uint256 _lockPeriodInYears
     ) {
-        require(_yieldVault != address(0), "Invalid yield vault address");
+        require(_usdc != address(0), "Invalid USDC address");
+        require(_moreMarkets != address(0), "Invalid MORE Markets address");
         require(bytes(_name).length > 0, "Name cannot be empty");
         require(_fosterHome != address(0), "Invalid foster home address");
         require(_lockPeriodInYears >= MIN_LOCK_PERIOD, "Lock period too short");
         require(_age > 0, "Age must be greater than 0");
 
-        yieldVault = IYieldVault(_yieldVault);
+        usdc = IERC20(_usdc);
+        moreMarkets = IMOREMarkets(_moreMarkets);
         
         kid = Kid({
             name: _name,
@@ -79,30 +88,36 @@ contract HODLJar {
     /**
      * @dev Donate to the HODL jar
      */
-    function donate() external payable {
+    function donate() external nonReentrant {
         require(kid.donor == address(0), "HODL jar already has a donor");
-        require(msg.value == DONATION_AMOUNT, "Donation amount must be 1000 FLOW");
+        
+        // Transfer USDC from donor to this contract
+        require(usdc.transferFrom(msg.sender, address(this), DONATION_AMOUNT), 
+                "USDC transfer failed");
+        
+        // Approve MORE Markets to spend USDC
+        usdc.approve(address(moreMarkets), DONATION_AMOUNT);
+        
+        // Deposit into MORE Markets
+        require(moreMarkets.deposit(address(usdc), DONATION_AMOUNT), 
+                "MORE Markets deposit failed");
         
         kid.donor = msg.sender;
-        kid.initialDeposit = msg.value;
+        kid.initialDeposit = DONATION_AMOUNT;
         kid.depositTimestamp = block.timestamp;
         
-        // Deposit to yield vault
-        bool success = yieldVault.deposit{value: msg.value}();
-        require(success, "Deposit to yield vault failed");
-        
-        emit DonationReceived(msg.sender, msg.value);
+        emit DonationReceived(msg.sender, DONATION_AMOUNT);
     }
     
     /**
      * @dev Withdraw yield from the HODL jar
      */
-    function withdrawYield() external {
+    function withdrawYield() external nonReentrant {
         require(kid.donor != address(0), "HODL jar has no donor");
         require(msg.sender == kid.fosterHome, "Only foster home can withdraw yield");
         
-        // Get current balance from yield vault
-        uint256 currentBalance = yieldVault.getBalance(address(this));
+        // Get current balance from MORE Markets
+        uint256 currentBalance = moreMarkets.getBalance(address(this), address(usdc));
         
         // Calculate yield
         uint256 yieldAmount = currentBalance > kid.initialDeposit ? 
@@ -110,12 +125,13 @@ contract HODLJar {
         
         require(yieldAmount > 0, "No yield available");
         
-        // Withdraw from yield vault
-        bool success = yieldVault.withdraw(yieldAmount);
-        require(success, "Withdrawal from yield vault failed");
+        // Withdraw from MORE Markets
+        require(moreMarkets.withdraw(address(usdc), yieldAmount), 
+                "MORE Markets withdrawal failed");
         
-        // Transfer to foster home
-        payable(kid.fosterHome).transfer(yieldAmount);
+        // Transfer USDC to foster home
+        require(usdc.transfer(kid.fosterHome, yieldAmount), 
+                "USDC transfer failed");
         
         emit YieldWithdrawn(kid.fosterHome, yieldAmount);
     }
@@ -123,7 +139,7 @@ contract HODLJar {
     /**
      * @dev Withdraw principal from the HODL jar after lock period
      */
-    function withdrawPrincipal() external {
+    function withdrawPrincipal() external nonReentrant {
         require(kid.donor != address(0), "HODL jar has no donor");
         require(msg.sender == kid.fosterHome, "Only foster home can withdraw principal");
         
@@ -134,15 +150,16 @@ contract HODLJar {
             "Lock period has not passed yet"
         );
         
-        // Get current balance from yield vault
-        uint256 currentBalance = yieldVault.getBalance(address(this));
+        // Get current balance from MORE Markets
+        uint256 currentBalance = moreMarkets.getBalance(address(this), address(usdc));
         
-        // Withdraw entire balance from yield vault
-        bool success = yieldVault.withdraw(currentBalance);
-        require(success, "Withdrawal from yield vault failed");
+        // Withdraw entire balance from MORE Markets
+        require(moreMarkets.withdraw(address(usdc), currentBalance), 
+                "MORE Markets withdrawal failed");
         
-        // Transfer to foster home
-        payable(kid.fosterHome).transfer(currentBalance);
+        // Transfer USDC to foster home
+        require(usdc.transfer(kid.fosterHome, currentBalance), 
+                "USDC transfer failed");
         
         // Reset kid data to avoid duplicate withdrawals
         kid.initialDeposit = 0;
@@ -157,14 +174,8 @@ contract HODLJar {
     function getCurrentYield() external view returns (uint256) {
         require(kid.donor != address(0), "HODL jar has no donor");
         
-        // Get current balance from yield vault
-        uint256 currentBalance = yieldVault.getBalance(address(this));
-        
-        // Calculate yield
-        uint256 yieldAmount = currentBalance > kid.initialDeposit ? 
-                             currentBalance - kid.initialDeposit : 0;
-        
-        return yieldAmount;
+        uint256 currentBalance = moreMarkets.getBalance(address(this), address(usdc));
+        return currentBalance > kid.initialDeposit ? currentBalance - kid.initialDeposit : 0;
     }
     
     /**
@@ -172,7 +183,7 @@ contract HODLJar {
      * @return Current APY in basis points
      */
     function getCurrentAPY() external view returns (uint256) {
-        return yieldVault.getCurrentAPY();
+        return moreMarkets.getAPY(address(usdc));
     }
     
     /**
@@ -189,14 +200,9 @@ contract HODLJar {
      */
     function getLockTimeRemaining() external view returns (uint256) {
         uint256 lockEndTime = kid.depositTimestamp + (kid.lockPeriodInYears * 365 days);
-        
-        if (block.timestamp >= lockEndTime) {
-            return 0;
-        }
-        
-        return lockEndTime - block.timestamp;
+        return block.timestamp >= lockEndTime ? 0 : lockEndTime - block.timestamp;
     }
     
-    // Fallback function to receive FLOW tokens
+    // Fallback function to receive USDC tokens
     receive() external payable {}
 }
