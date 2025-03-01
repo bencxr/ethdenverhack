@@ -1,6 +1,7 @@
 import { getContract } from 'viem';
 import { usdcABI } from './abis/usdcABI';
 import { hodlJarABI } from './abis/hodlJarABI';
+import { poolABI } from './abis/poolABI';
 
 // USDC contract address on the network you're using
 const USDC_ADDRESS = '0xF1815bd50389c46847f0Bda824eC8da914045D14'; // Polygon USDC address - replace with your network's address
@@ -30,4 +31,18 @@ export function getHODLJarContract(walletClient, jarAddress) {
         abi: hodlJarABI,
         walletClient,
     });
-} 
+}
+
+/**
+ * Get the pool contract instance
+ * @param {Object} walletClient - The wallet client
+ * @param {string} poolAddress - The pool contract address
+ * @returns {Object} The pool contract instance
+ */
+export function getPoolContract(walletClient, poolAddress) {
+    return getContract({
+        address: poolAddress,
+        abi: poolABI,
+        walletClient,
+    });
+}

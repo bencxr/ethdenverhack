@@ -34,12 +34,20 @@ export async function donateToHODLJar(wallet, donationData) {
 
         console.log(`Approval transaction hash: ${approveTx}`);
 
+        // Wait for the approval transaction to be confirmed
+        console.log(`Waiting for approval transaction to be confirmed...`);
+        const publicClient = await wallet.getPublicClient();
+        await publicClient.waitForTransactionReceipt({
+            hash: approveTx,
+        });
+        console.log(`Approval transaction confirmed!`);
+
         // Then deposit into the HODL jar
         console.log(`Depositing ${amount} USDC into HODL jar...`);
         const depositTx = await walletClient.writeContract({
             ...hodlJarContract,
             functionName: 'deposit',
-            args: [amountInUSDC, wallet.address]
+            args: [amountInUSDC]
         });
 
         console.log(`Deposit transaction hash: ${depositTx}`);

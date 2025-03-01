@@ -4,7 +4,7 @@ import './DonationForm.css';
 export function DonationForm({ onSubmit, onCancel }) {
     const [formData, setFormData] = useState({
         jarId: '',
-        amount: 500, // Default amount set to 500 USDC
+        amount: 0.01, // Default amount set to 0.01 USDC
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -47,10 +47,11 @@ export function DonationForm({ onSubmit, onCancel }) {
                         name="amount"
                         value={formData.amount}
                         onChange={handleChange}
-                        min="500"
+                        min="0.01"
+                        step="0.01"
                         required
                     />
-                    <small>Minimum donation: 500 USDC</small>
+                    <small>Minimum donation: 0.01 USDC</small>
                 </div>
                 <div className="form-actions">
                     <button type="submit" className="btn btn-primary" disabled={isSubmitting}>

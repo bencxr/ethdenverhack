@@ -3,15 +3,13 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "./interfaces/IMOREMarkets.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import "./interfaces/IPool.sol";
 
 /**
  * @title HODLJar
- * @dev ERC4626 compliant contract representing a single HODL jar for a foster kid
+ * @dev Contract representing a single HODL jar for a foster kid
  */
-contract HODLJar is ERC4626, ReentrancyGuard {
+contract HODLJar is ReentrancyGuard {
     string public kidname;
     string public story;
     string public imageurl;
@@ -25,11 +23,11 @@ contract HODLJar is ERC4626, ReentrancyGuard {
     IERC20 public immutable usdc;
 
     // MORE Markets contract
-    IMOREMarkets public immutable moreMarkets =
-        IMOREMarkets(0xbC92aaC2DBBF42215248B5688eB3D3d2b32F2c8d);
+    IPool public immutable moreMarkets =
+        IPool(0xbC92aaC2DBBF42215248B5688eB3D3d2b32F2c8d);
 
-    // Fixed donation amount (in USDC, 1000 with 6 decimals)
-    uint256 public constant DONATION_AMOUNT = 500 * 10 ** 6;
+    // Fixed donation amount (in USDC, 0.1 with 6 decimals)
+    uint256 public constant DONATION_AMOUNT = 0.001 * 10 ** 6;
 
     // Events
     event DonationReceived(address donor, uint256 amount);
@@ -52,13 +50,7 @@ contract HODLJar is ERC4626, ReentrancyGuard {
         string memory _story,
         uint256 _age,
         address _fosterHome
-    )
-        ERC4626(IERC20(_usdc))
-        ERC20(
-            string.concat("HODL Jar - ", _kidname),
-            string.concat("HODL-", _kidname)
-        )
-    {
+    ) {
         require(_usdc != address(0), "Invalid USDC address");
         require(bytes(_kidname).length > 0, "Name cannot be empty");
         require(_fosterHome != address(0), "Invalid foster home address");
@@ -78,85 +70,51 @@ contract HODLJar is ERC4626, ReentrancyGuard {
     }
 
     /**
-     * @dev Override deposit to enforce single donor and fixed amount
+     * @dev Deposit USDC into the HODL jar
+     * @param amount Amount of USDC to deposit
      */
-    function deposit(
-        uint256 assets,
-        address receiver
-    ) public virtual override returns (uint256) {
+    function deposit(uint256 amount) external nonReentrant {
         require(donor == address(0), "HODL jar already has a donor");
         require(
-            assets >= DONATION_AMOUNT,
+            amount >= DONATION_AMOUNT,
             "Must deposit exact donation amount"
         );
 
-        uint256 shares = super.deposit(assets, receiver);
+        // Transfer USDC from donor to this contract
+        require(
+            usdc.transferFrom(msg.sender, address(this), amount),
+            "Transfer failed"
+        );
+
+        // Approve and deposit into MORE Markets
+        usdc.approve(address(moreMarkets), amount);
+
+        moreMarkets.supply(address(usdc), amount, address(this), 0);
 
         donor = msg.sender;
-        initialDeposit = assets;
+        initialDeposit = amount;
         depositTimestamp = block.timestamp;
 
-        emit DonationReceived(msg.sender, assets);
-        return shares;
+        emit DonationReceived(msg.sender, amount);
     }
 
     /**
-     * @dev Override withdraw to enforce lock until age 18
+     * @dev Withdraw assets from the HODL jar
+     * @param amount Amount of USDC to withdraw
      */
-    function withdraw(
-        uint256 assets,
-        address receiver,
-        address owner
-    ) public virtual override returns (uint256) {
+    function withdraw(uint256 amount) external nonReentrant {
         require(msg.sender == fosterHome, "Only foster home can withdraw");
-        require(
+        /*require(
             block.timestamp >= depositTimestamp + ((18 - age) * 365 days),
             "Cannot withdraw until kid turns 18"
-        );
+        );*/
 
-        return super.withdraw(assets, receiver, owner);
-    }
+        moreMarkets.withdraw(address(usdc), type(uint256).max, address(this));
 
-    /**
-     * @dev Override to integrate with MORE Markets
-     */
-    function totalAssets() public view virtual override returns (uint256) {
-        return moreMarkets.getBalance(address(this), address(asset()));
-    }
+        // Transfer USDC to foster home
+        require(usdc.transfer(fosterHome, amount), "Transfer failed");
 
-    /**
-     * @dev Internal function to deposit assets into MORE Markets
-     */
-    function _deposit(
-        address caller,
-        address receiver,
-        uint256 assets,
-        uint256 shares
-    ) internal virtual override {
-        super._deposit(caller, receiver, assets, shares);
-
-        IERC20(asset()).approve(address(moreMarkets), assets);
-        require(
-            moreMarkets.deposit(address(asset()), assets),
-            "MORE Markets deposit failed"
-        );
-    }
-
-    /**
-     * @dev Internal function to withdraw assets from MORE Markets
-     */
-    function _withdraw(
-        address caller,
-        address receiver,
-        address owner,
-        uint256 assets,
-        uint256 shares
-    ) internal virtual override {
-        require(
-            moreMarkets.withdraw(address(asset()), assets),
-            "MORE Markets withdrawal failed"
-        );
-        super._withdraw(caller, receiver, owner, assets, shares);
+        emit PrincipalWithdrawn(fosterHome, amount);
     }
 
     /**
@@ -200,5 +158,13 @@ contract HODLJar is ERC4626, ReentrancyGuard {
         uint256 lockEndTime = depositTimestamp + ((18 - age) * 365 days);
         return
             block.timestamp >= lockEndTime ? 0 : lockEndTime - block.timestamp;
+    }
+
+    /**
+     * @dev Get total assets in the HODL jar
+     * @return Total assets amount
+     */
+    function totalAssets() public view returns (uint256) {
+        return moreMarkets.getBalance(address(this), address(usdc));
     }
 }

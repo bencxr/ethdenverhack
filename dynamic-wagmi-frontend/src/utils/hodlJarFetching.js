@@ -48,6 +48,13 @@ const jarABI = [
         outputs: [{ type: 'uint256' }]
     },
     {
+        name: 'donor',
+        type: 'function',
+        stateMutability: 'view',
+        inputs: [],
+        outputs: [{ type: 'address' }]
+    },
+    {
         name: 'fosterHome',
         type: 'function',
         stateMutability: 'view',
@@ -118,12 +125,19 @@ export async function fetchAllHODLJars(wallet) {
                     functionName: 'fosterHome'
                 });
 
+                const donor = await publicClient.readContract({
+                    address: jarAddress,
+                    abi: jarABI,
+                    functionName: 'donor'
+                });
+
                 return {
                     address: jarAddress,
                     kidname,
                     imageurl,
                     story,
                     age: age.toString(),
+                    donor: donor,
                     fosterHome
                 };
             })
