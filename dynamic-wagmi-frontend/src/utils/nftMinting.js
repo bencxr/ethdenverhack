@@ -4,14 +4,49 @@ import { isEthereumWallet } from '@dynamic-labs/ethereum';
 /**
  * Mints an NFT using the connected wallet
  * @param {Object} primaryWallet - The user's primary wallet
- * @param {string} tokenURI - URI for the NFT metadata
- * @param {Function} setResult - Function to update the result state
- * @returns {Promise<void>}
+ * @param {Object} nftFormData - NFT metadata including name, description, age, animal, and image
+ * @returns {Promise<Object>} - Result of the minting operation
  */
-export async function mintNFT(primaryWallet, tokenURI = "https://bafybeidqfbmquh3u7nm4pmpycouijnyebaglk376ymfaztd45kmy4dpgye.ipfs.w3s.link/nft1.json") {
-    if (!primaryWallet || !isEthereumWallet(primaryWallet)) return;
+export async function mintNFT(primaryWallet, nftFormData) {
+    if (!primaryWallet || !isEthereumWallet(primaryWallet)) {
+        return {
+            success: false,
+            message: "No Ethereum wallet connected"
+        };
+    }
 
     try {
+        // First, upload the image to Pinata
+        const imageUploadResult = await uploadImageToPinata(nftFormData.image);
+        if (!imageUploadResult.success) {
+            return imageUploadResult;
+        }
+        console.log(imageUploadResult);
+
+        // Create NFT metadata JSON
+        const nftJSON = {
+            name: nftFormData.name,
+            description: nftFormData.description,
+            image: imageUploadResult.ipfsUrl,
+            attributes: [
+                {
+                    trait_type: "Age",
+                    value: nftFormData.age
+                },
+                {
+                    trait_type: "Animal",
+                    value: nftFormData.animal
+                }
+            ]
+        };
+
+        // Upload metadata JSON to Pinata
+        const metadataUploadResult = await uploadMetadataToPinata(nftJSON);
+        if (!metadataUploadResult.success) {
+            return metadataUploadResult;
+        }
+
+        // Now mint the NFT with the metadata URI
         const walletClient = await primaryWallet.getWalletClient();
         const publicClient = await primaryWallet.getPublicClient();
 
@@ -31,7 +66,7 @@ export async function mintNFT(primaryWallet, tokenURI = "https://bafybeidqfbmquh
         const data = encodeFunctionData({
             abi: [mintABI],
             functionName: 'mint',
-            args: [tokenURI]
+            args: [metadataUploadResult.ipfsUrl]
         });
 
         // Send the transaction
@@ -58,6 +93,92 @@ export async function mintNFT(primaryWallet, tokenURI = "https://bafybeidqfbmquh
         return {
             success: false,
             message: `Error minting NFT: ${error.message}`
+        };
+    }
+}
+
+/**
+ * Uploads an image file to Pinata IPFS
+ * @param {File} imageFile - The image file to upload
+ * @returns {Promise<Object>} - Result of the upload operation
+ */
+async function uploadImageToPinata(imageFile) {
+    try {
+        const formData = new FormData();
+        formData.append('file', imageFile);
+        formData.append('pinataMetadata', JSON.stringify({
+            name: `NFT-Image-${Date.now()}`
+        }));
+
+        const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI5ZTgxZjExZi1kN2M3LTQ0OTYtYmJjYy03YTJjNmJmM2RlYzUiLCJlbWFpbCI6ImJlbmN4ckBmcmFnbmV0aWNzLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaW5fcG9saWN5Ijp7InJlZ2lvbnMiOlt7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6IkZSQTEifSx7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6Ik5ZQzEifV0sInZlcnNpb24iOjF9LCJtZmFfZW5hYmxlZCI6ZmFsc2UsInN0YXR1cyI6IkFDVElWRSJ9LCJhdXRoZW50aWNhdGlvblR5cGUiOiJzY29wZWRLZXkiLCJzY29wZWRLZXlLZXkiOiI2YmE1NDA4NTA4YTA2MWRhMGVkMyIsInNjb3BlZEtleVNlY3JldCI6IjY5ZDM4OGRlYmZiNTUzMDdlNjRjYzAzZmE1NzIwNjYyNjRjNDUwYzc5NjgxOTRkNThhYzc2MzFlMWRkYWEwN2YiLCJleHAiOjE3NzIzMjkzNzJ9.hc0kBix7t9PcdXlVqFL9gCPB6d87BQtIq6fg5yuzmF0'
+            },
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            return {
+                success: true,
+                ipfsHash: data.IpfsHash,
+                ipfsUrl: `https://${data.IpfsHash}.ipfs.w3s.link`
+            };
+        } else {
+            return {
+                success: false,
+                message: `Failed to upload image: ${data.error || 'Unknown error'}`
+            };
+        }
+    } catch (error) {
+        return {
+            success: false,
+            message: `Error uploading image: ${error.message}`
+        };
+    }
+}
+
+/**
+ * Uploads NFT metadata JSON to Pinata IPFS
+ * @param {Object} metadata - The NFT metadata
+ * @returns {Promise<Object>} - Result of the upload operation
+ */
+async function uploadMetadataToPinata(metadata) {
+    try {
+        const response = await fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI5ZTgxZjExZi1kN2M3LTQ0OTYtYmJjYy03YTJjNmJmM2RlYzUiLCJlbWFpbCI6ImJlbmN4ckBmcmFnbmV0aWNzLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaW5fcG9saWN5Ijp7InJlZ2lvbnMiOlt7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6IkZSQTEifSx7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6Ik5ZQzEifV0sInZlcnNpb24iOjF9LCJtZmFfZW5hYmxlZCI6ZmFsc2UsInN0YXR1cyI6IkFDVElWRSJ9LCJhdXRoZW50aWNhdGlvblR5cGUiOiJzY29wZWRLZXkiLCJzY29wZWRLZXlLZXkiOiI2YmE1NDA4NTA4YTA2MWRhMGVkMyIsInNjb3BlZEtleVNlY3JldCI6IjY5ZDM4OGRlYmZiNTUzMDdlNjRjYzAzZmE1NzIwNjYyNjRjNDUwYzc5NjgxOTRkNThhYzc2MzFlMWRkYWEwN2YiLCJleHAiOjE3NzIzMjkzNzJ9.hc0kBix7t9PcdXlVqFL9gCPB6d87BQtIq6fg5yuzmF0'
+            },
+            body: JSON.stringify({
+                pinataContent: metadata,
+                pinataMetadata: {
+                    name: `NFT-Metadata-${Date.now()}`
+                }
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            return {
+                success: true,
+                ipfsHash: data.IpfsHash,
+                ipfsUrl: `https://${data.IpfsHash}.ipfs.w3s.link`
+            };
+        } else {
+            return {
+                success: false,
+                message: `Failed to upload metadata: ${data.error || 'Unknown error'}`
+            };
+        }
+    } catch (error) {
+        return {
+            success: false,
+            message: `Error uploading metadata: ${error.message}`
         };
     }
 } 
