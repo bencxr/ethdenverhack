@@ -61,7 +61,7 @@ export function NFTGalleryPage() {
     <div className="nft-gallery-page">
       <NavBar />
       <header className="gallery-header">
-        <h1>Our NFT Collection</h1>
+        <h1>Art for Sponsors</h1>
         <p>Browse some of the art that kids drew for their sponsors</p>
       </header>
 
