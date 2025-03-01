@@ -4,8 +4,10 @@ import { isEthereumWallet } from '@dynamic-labs/ethereum'
 import { parseEther } from 'viem';
 import { mintNFT as mintNFTUtil } from './utils/nftMinting';
 import { createHODLJar } from './utils/hodlJarCreation';
+import { fetchAllHODLJars } from './utils/hodlJarFetching';
 import { HODLJarForm } from './HODLJarForm';
 import { NFTMintingForm } from './NFTMintingForm';
+import { HODLJarsList } from './HODLJarsList';
 
 import './Methods.css';
 
@@ -17,6 +19,8 @@ export default function DynamicMethods({ isDarkMode }) {
   const [result, setResult] = useState('');
   const [isCreatingJar, setIsCreatingJar] = useState(false);
   const [showNftForm, setShowNftForm] = useState(false);
+  const [hodlJars, setHodlJars] = useState([]);
+  const [showJars, setShowJars] = useState(false);
 
   const safeStringify = (obj) => {
     const seen = new WeakSet();
@@ -124,6 +128,21 @@ export default function DynamicMethods({ isDarkMode }) {
     setIsCreatingJar(false);
   };
 
+  async function fetchHODLJars() {
+    if (!primaryWallet || !isEthereumWallet(primaryWallet)) return;
+
+    setResult("Fetching HODL jars...");
+    const result = await fetchAllHODLJars(primaryWallet);
+
+    if (result.success) {
+      setHodlJars(result.jars);
+      setShowJars(true);
+      setResult(result.message);
+    } else {
+      setResult(result.message);
+    }
+  }
+
   return (
     <>
       {!isLoading && (
@@ -145,6 +164,9 @@ export default function DynamicMethods({ isDarkMode }) {
                 >
                   {isCreatingJar ? 'Hide Form' : 'Create New HODL Jar'}
                 </button>
+                <button className="btn btn-primary" onClick={fetchHODLJars}>
+                  View All HODL Jars
+                </button>
               </>
             }
           </div>
@@ -163,6 +185,8 @@ export default function DynamicMethods({ isDarkMode }) {
               <HODLJarForm onSubmit={handleCreateHODLJar} />
             </div>
           )}
+
+          {showJars && <HODLJarsList hodlJars={hodlJars} />}
 
           {result && (
             <div className="results-container">
