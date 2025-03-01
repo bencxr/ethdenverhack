@@ -27,6 +27,8 @@ async function main() {
 }
 
 async function createJars(factoryAddress) {
+    // Use existing foster home address
+    const fosterHomeAddress = "0x144D8f50882904798CC33AaEF7cb9C00Ba7CAfce";
 
     // Get the factory contract instance
     const hodlJarFactory = await hre.ethers.getContractAt("HODLJarFactory", factoryAddress);
@@ -38,21 +40,21 @@ async function createJars(factoryAddress) {
             imageurl: "https://live.staticflickr.com/65535/54357472806_06aca1faf7_b.jpg",
             story: "Emma is a bright 8-year-old who loves reading and science experiments.",
             age: 6,
-            fosterHome: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8" // Replace with actual foster home address
+            fosterHome: fosterHomeAddress // Replace with actual foster home address
         },
         {
             kidname: "Tim",
             imageurl: "https://live.staticflickr.com/65535/54357472801_27d4b0ee51_b.jpg",
             story: "Liam is a growing boy who loves sports and playing with his friends.",
             age: 4,
-            fosterHome: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8" // Replace with actual foster home address
+            fosterHome: fosterHomeAddress // Replace with actual foster home address
         },
         {
             kidname: "Jeannie",
             imageurl: "https://live.staticflickr.com/65535/54357873385_618e38b675_b.jpg",
             story: "Jeannie is a kind 6-year-old who loves to play with her dolls.",
             age: 5,
-            fosterHome: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8" // Replace with actual foster home address
+            fosterHome: fosterHomeAddress // Replace with actual foster home address
         }
     ];
 

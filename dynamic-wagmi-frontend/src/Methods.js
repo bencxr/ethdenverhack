@@ -12,6 +12,8 @@ import { fetchAllCollectionNFTs } from './utils/nftFetching';
 import { NFTGallery } from './NFTGallery';
 import { donateToHODLJar } from './utils/hodlJarDonation';
 import { DonationForm } from './DonationForm';
+import { withdrawFromHODLJar } from './utils/hodlJarWithdrawal';
+import { WithdrawalForm } from './WithdrawalForm';
 
 import './Methods.css';
 
@@ -29,6 +31,7 @@ export default function DynamicMethods({ isDarkMode }) {
   const [showNftGallery, setShowNftGallery] = useState(false);
   const [nftLoading, setNftLoading] = useState(false);
   const [showDonationForm, setShowDonationForm] = useState(false);
+  const [showWithdrawalForm, setShowWithdrawalForm] = useState(false);
 
   const safeStringify = (obj) => {
     const seen = new WeakSet();
@@ -62,6 +65,7 @@ export default function DynamicMethods({ isDarkMode }) {
     setShowJars(false);
     setShowNftGallery(false);
     setShowDonationForm(false);
+    setShowWithdrawalForm(false);
     setResult(''); // Clear the result message when switching methods
   }
 
@@ -195,6 +199,23 @@ export default function DynamicMethods({ isDarkMode }) {
     }
   };
 
+  const toggleWithdrawalForm = () => {
+    hideAllForms();
+    setShowWithdrawalForm(true);
+  };
+
+  const handleWithdrawFromHODLJar = async (withdrawalData) => {
+    if (!primaryWallet || !isEthereumWallet(primaryWallet)) return;
+
+    setResult("Processing withdrawal...");
+    const result = await withdrawFromHODLJar(primaryWallet, withdrawalData);
+    setResult(result.message);
+
+    if (result.success) {
+      setShowWithdrawalForm(false);
+    }
+  };
+
   return (
     <>
       {!isLoading && (
@@ -222,6 +243,9 @@ export default function DynamicMethods({ isDarkMode }) {
                 </button>
                 <button className="btn btn-primary" onClick={toggleDonationForm}>
                   Donate to HODL Jar
+                </button>
+                <button className="btn btn-primary" onClick={toggleWithdrawalForm}>
+                  Withdraw from HODL Jar
                 </button>
                 <button className="btn btn-primary" onClick={fetchNFTs}>
                   View Paintings
@@ -254,6 +278,15 @@ export default function DynamicMethods({ isDarkMode }) {
               <DonationForm
                 onSubmit={handleDonateToHODLJar}
                 onCancel={() => setShowDonationForm(false)}
+              />
+            </div>
+          )}
+
+          {showWithdrawalForm && (
+            <div className="form-container">
+              <WithdrawalForm
+                onSubmit={handleWithdrawFromHODLJar}
+                onCancel={() => setShowWithdrawalForm(false)}
               />
             </div>
           )}
