@@ -18,6 +18,11 @@
     color: #34495e;
   }
   
+  .foster-home-management h3 {
+    margin: 15px 0;
+    color: #34495e;
+  }
+  
   /* Buttons container */
   .management-buttons {
     display: flex;
@@ -66,6 +71,34 @@
   
   .clear-btn:hover {
     background-color: #6c7a7d;
+  }
+  
+  .view-btn {
+    background-color: #9b59b6;
+    padding: 8px 15px;
+    font-size: 14px;
+  }
+  
+  .view-btn:hover {
+    background-color: #8e44ad;
+  }
+  
+  .deposit-btn {
+    background-color: #27ae60;
+    padding: 8px 15px;
+    font-size: 14px;
+  }
+  
+  .deposit-btn:hover {
+    background-color: #219653;
+  }
+  
+  .back-btn {
+    background-color: #f39c12;
+  }
+  
+  .back-btn:hover {
+    background-color: #d35400;
   }
   
   /* Form container */
@@ -145,7 +178,7 @@
   }
   
   /* Kids list */
-  .kids-list {
+  .kids-list, .wallet-details {
     background-color: #f9f9f9;
     border-radius: 8px;
     padding: 20px;
@@ -194,16 +227,84 @@
     color: #34495e;
   }
   
-  .kid-section {
+  .kid-actions {
     margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   }
   
-  .kid-section p:first-child {
-    margin-bottom: 5px;
+  .deposit-form {
+    display: flex;
+    gap: 5px;
   }
   
-  .kid-section p:last-child {
-    color: #7f8c8d;
+  .deposit-form input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  /* Wallet details */
+  .wallet-info {
+    background-color: #eaf7fd;
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    border-left: 4px solid #3498db;
+  }
+  
+  .transaction-list {
+    margin-bottom: 20px;
+    overflow-x: auto;
+  }
+  
+  .transaction-list table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .transaction-list th, 
+  .transaction-list td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .transaction-list th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+  }
+  
+  .transaction-list tr.deposit {
+    background-color: rgba(39, 174, 96, 0.1);
+  }
+  
+  .transaction-list tr.withdrawal {
+    background-color: rgba(231, 76, 60, 0.1);
+  }
+  
+  .wallet-deposit {
+    background-color: #f2f2f2;
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+  }
+  
+  .deposit-form-large {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  
+  .deposit-form-large input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
   }
   
   /* Dark theme */
@@ -213,13 +314,15 @@
   }
   
   .foster-home-management[data-theme="dark"] h1,
-  .foster-home-management[data-theme="dark"] h2 {
+  .foster-home-management[data-theme="dark"] h2,
+  .foster-home-management[data-theme="dark"] h3 {
     color: #f0f0f0;
   }
   
   .foster-home-management[data-theme="dark"] .form-container,
   .foster-home-management[data-theme="dark"] .results-container,
-  .foster-home-management[data-theme="dark"] .kids-list {
+  .foster-home-management[data-theme="dark"] .kids-list,
+  .foster-home-management[data-theme="dark"] .wallet-details {
     background-color: #2a2a2a;
     color: #f0f0f0;
   }
@@ -251,6 +354,27 @@
     border-left-color: #3498db;
   }
   
+  .foster-home-management[data-theme="dark"] .wallet-info {
+    background-color: #2c3e50;
+    border-left-color: #3498db;
+  }
+  
+  .foster-home-management[data-theme="dark"] .wallet-deposit {
+    background-color: #333;
+  }
+  
+  .foster-home-management[data-theme="dark"] .transaction-list th {
+    background-color: #444;
+  }
+  
+  .foster-home-management[data-theme="dark"] .transaction-list tr.deposit {
+    background-color: rgba(39, 174, 96, 0.2);
+  }
+  
+  .foster-home-management[data-theme="dark"] .transaction-list tr.withdrawal {
+    background-color: rgba(231, 76, 60, 0.2);
+  }
+  
   /* Responsive adjustments */
   @media (max-width: 768px) {
     .management-buttons {
@@ -272,5 +396,9 @@
     
     .kids-grid {
       grid-template-columns: 1fr;
+    }
+    
+    .deposit-form-large {
+      flex-direction: column;
     }
   }

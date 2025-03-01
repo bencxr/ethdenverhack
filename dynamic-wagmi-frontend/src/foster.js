@@ -8,9 +8,10 @@ export default function FosterHomeManagement({ isDarkMode }) {
   const { sdkHasLoaded, primaryWallet } = useDynamicContext();
   const [isLoading, setIsLoading] = useState(true);
   const [result, setResult] = useState('');
-  const [activeForm, setActiveForm] = useState(null); // 'kid', 'withdrawal', 'kids'
+  const [activeForm, setActiveForm] = useState(null); // 'kid', 'withdrawal', 'kids', 'childWallet'
   const [kids, setKids] = useState([]);
   const [balance, setBalance] = useState(null);
+  const [selectedChild, setSelectedChild] = useState(null);
   
   // Form states
   const [kidFormData, setKidFormData] = useState({
@@ -20,7 +21,8 @@ export default function FosterHomeManagement({ isDarkMode }) {
     specialNeeds: '',
     medicalInfo: '',
     educationLevel: '',
-    notes: ''
+    notes: '',
+    walletAddress: '' // Added wallet address field
   });
   
   const [withdrawalFormData, setWithdrawalFormData] = useState({
@@ -29,6 +31,31 @@ export default function FosterHomeManagement({ isDarkMode }) {
     recipient: '',
     notes: ''
   });
+
+  // Mock data for child wallets
+  const [childWallets, setChildWallets] = useState([
+    {
+      childId: '1',
+      childName: 'Emma Johnson',
+      walletAddress: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
+      balance: 0.45,
+      transactions: [
+        { date: '2023-10-15', amount: 0.1, type: 'deposit', description: 'Birthday gift' },
+        { date: '2023-11-20', amount: 0.15, type: 'deposit', description: 'Holiday allowance' },
+        { date: '2023-12-25', amount: 0.2, type: 'deposit', description: 'Christmas gift' }
+      ]
+    },
+    {
+      childId: '2',
+      childName: 'Michael Smith',
+      walletAddress: '0x2546BcD3c84621e976D8185a91A922aE77ECEc30',
+      balance: 0.32,
+      transactions: [
+        { date: '2023-09-05', amount: 0.12, type: 'deposit', description: 'School achievement' },
+        { date: '2023-11-10', amount: 0.2, type: 'deposit', description: 'Monthly allowance' }
+      ]
+    }
+  ]);
 
   useEffect(() => {
     if (sdkHasLoaded && isLoggedIn && primaryWallet) {
@@ -45,6 +72,7 @@ export default function FosterHomeManagement({ isDarkMode }) {
   function hideAllForms() {
     setActiveForm(null);
     setResult('');
+    setSelectedChild(null);
   }
 
   async function fetchBalance() {
@@ -80,6 +108,10 @@ export default function FosterHomeManagement({ isDarkMode }) {
 
     setResult("Uploading child information...");
     try {
+      // Generate a mock wallet address if not provided
+      const walletAddress = kidFormData.walletAddress || 
+        `0x${Array.from({length: 40}, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
+      
       // Mock API call - replace with actual implementation
       await new Promise(resolve => setTimeout(resolve, 1000));
       
@@ -87,11 +119,24 @@ export default function FosterHomeManagement({ isDarkMode }) {
       const newKid = {
         id: Date.now().toString(),
         ...kidFormData,
+        walletAddress,
         dateAdded: new Date().toISOString()
       };
       
       setKids(prev => [...prev, newKid]);
-      setResult("Child information uploaded successfully!");
+      
+      // Also add a wallet for this child
+      const newWallet = {
+        childId: newKid.id,
+        childName: newKid.name,
+        walletAddress,
+        balance: 0,
+        transactions: []
+      };
+      
+      setChildWallets(prev => [...prev, newWallet]);
+      
+      setResult("Child information and wallet created successfully!");
       setActiveForm(null);
       setKidFormData({
         name: '',
@@ -100,7 +145,8 @@ export default function FosterHomeManagement({ isDarkMode }) {
         specialNeeds: '',
         medicalInfo: '',
         educationLevel: '',
-        notes: ''
+        notes: '',
+        walletAddress: ''
       });
     } catch (error) {
       setResult(`Error uploading information: ${error.message}`);
@@ -138,15 +184,103 @@ export default function FosterHomeManagement({ isDarkMode }) {
       // Mock API call - replace with actual implementation
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // If we already have kids in state, just show them
-      if (kids.length > 0) {
+      // Combine our mock data with any kids added through the form
+      const allKids = [...kids];
+      
+      if (allKids.length > 0) {
         setActiveForm('kids');
-        setResult(`Found ${kids.length} children records.`);
+        setResult(`Found ${allKids.length} children records.`);
       } else {
         setResult("No children records found.");
       }
     } catch (error) {
       setResult(`Error fetching children information: ${error.message}`);
+    }
+  }
+
+  function viewChildWallet(childId) {
+    const wallet = childWallets.find(w => w.childId === childId);
+    if (wallet) {
+      setSelectedChild(wallet);
+      setActiveForm('childWallet');
+    } else {
+      setResult(`Error: Could not find wallet for child ID ${childId}`);
+    }
+  }
+
+  async function createChildWallet(childId, childName) {
+    if (!primaryWallet || !isEthereumWallet(primaryWallet)) return;
+
+    setResult(`Creating wallet for ${childName}...`);
+    try {
+      // Mock API call - replace with actual implementation
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const walletAddress = `0x${Array.from({length: 40}, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
+      
+      const newWallet = {
+        childId,
+        childName,
+        walletAddress,
+        balance: 0,
+        transactions: []
+      };
+      
+      setChildWallets(prev => [...prev, newWallet]);
+      setResult(`Successfully created wallet for ${childName}: ${walletAddress}`);
+    } catch (error) {
+      setResult(`Error creating wallet: ${error.message}`);
+    }
+  }
+
+  async function depositToChildWallet(childId, amount) {
+    if (!primaryWallet || !isEthereumWallet(primaryWallet)) return;
+    if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
+      setResult("Please enter a valid amount");
+      return;
+    }
+
+    const amountValue = parseFloat(amount);
+    const child = childWallets.find(w => w.childId === childId);
+    
+    if (!child) {
+      setResult(`Error: Could not find wallet for child ID ${childId}`);
+      return;
+    }
+
+    setResult(`Depositing ${amountValue} ETH to ${child.childName}'s wallet...`);
+    try {
+      // Mock API call - replace with actual implementation
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Update the child's wallet with the new transaction and balance
+      setChildWallets(prev => prev.map(wallet => {
+        if (wallet.childId === childId) {
+          const newTransaction = {
+            date: new Date().toISOString().split('T')[0],
+            amount: amountValue,
+            type: 'deposit',
+            description: 'Foster home deposit'
+          };
+          
+          return {
+            ...wallet,
+            balance: wallet.balance + amountValue,
+            transactions: [...wallet.transactions, newTransaction]
+          };
+        }
+        return wallet;
+      }));
+      
+      setResult(`Successfully deposited ${amountValue} ETH to ${child.childName}'s wallet`);
+      
+      // Refresh the selected child data if we're viewing their wallet
+      if (selectedChild && selectedChild.childId === childId) {
+        const updatedChild = childWallets.find(w => w.childId === childId);
+        setSelectedChild(updatedChild);
+      }
+    } catch (error) {
+      setResult(`Error making deposit: ${error.message}`);
     }
   }
 
@@ -159,17 +293,17 @@ export default function FosterHomeManagement({ isDarkMode }) {
           <div className="management-buttons">
             {primaryWallet && isEthereumWallet(primaryWallet) && (
               <>
-                <button className="btn" onClick={fetchBalance}>View Current Balance</button>
-                <button className="btn" onClick={() => setActiveForm('kid')}>Upload Child Information</button>
+                <button className="btn" onClick={fetchBalance}>View Foster Home Balance</button>
+                <button className="btn" onClick={() => setActiveForm('kid')}>Register New Child</button>
                 <button className="btn" onClick={() => setActiveForm('withdrawal')}>Withdraw Funds</button>
-                <button className="btn" onClick={fetchKids}>View Children Records</button>
+                <button className="btn" onClick={fetchKids}>Manage Children</button>
               </>
             )}
           </div>
 
           {activeForm === 'kid' && (
             <div className="form-container">
-              <h2>Child Information Form</h2>
+              <h2>Child Registration Form</h2>
               <form onSubmit={handleKidFormSubmit}>
                 <div className="form-group">
                   <label htmlFor="name">Full Name</label>
@@ -206,6 +340,18 @@ export default function FosterHomeManagement({ isDarkMode }) {
                     value={kidFormData.dateOfEntry}
                     onChange={handleKidFormChange}
                     required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="walletAddress">Existing Wallet Address (Optional)</label>
+                  <input
+                    type="text"
+                    id="walletAddress"
+                    name="walletAddress"
+                    value={kidFormData.walletAddress}
+                    onChange={handleKidFormChange}
+                    placeholder="0x... (Leave blank to create new wallet)"
                   />
                 </div>
 
@@ -254,7 +400,7 @@ export default function FosterHomeManagement({ isDarkMode }) {
                 </div>
 
                 <div className="form-buttons">
-                  <button type="submit" className="btn submit-btn">Submit</button>
+                  <button type="submit" className="btn submit-btn">Register Child</button>
                   <button type="button" className="btn cancel-btn" onClick={hideAllForms}>Cancel</button>
                 </div>
               </form>
@@ -273,7 +419,7 @@ export default function FosterHomeManagement({ isDarkMode }) {
               
               <form onSubmit={handleWithdrawalSubmit}>
                 <div className="form-group">
-                  <label htmlFor="amount">Amount (ETH)</label>
+                  <label htmlFor="amount">Amount (USDC)</label>
                   <input
                     type="number"
                     id="amount"
@@ -342,48 +488,117 @@ export default function FosterHomeManagement({ isDarkMode }) {
 
           {activeForm === 'kids' && (
             <div className="kids-list">
-              <h2>Children Records</h2>
-              {kids.length === 0 ? (
+              <h2>Children Management</h2>
+              {childWallets.length === 0 ? (
                 <p className="no-records">No children records found.</p>
               ) : (
                 <div className="kids-grid">
-                  {kids.map((kid) => (
-                    <div key={kid.id} className="kid-card">
+                  {childWallets.map((wallet) => (
+                    <div key={wallet.childId} className="kid-card">
                       <div className="kid-details">
-                        <h3>{kid.name}</h3>
-                        <p><strong>Age:</strong> {kid.age}</p>
-                        <p><strong>Entry Date:</strong> {new Date(kid.dateOfEntry).toLocaleDateString()}</p>
+                        <h3>{wallet.childName}</h3>
+                        <p><strong>Wallet:</strong> {wallet.walletAddress.substring(0, 6)}...{wallet.walletAddress.substring(38)}</p>
+                        <p><strong>Balance:</strong> {wallet.balance.toFixed(4)} ETH</p>
                         
-                        {kid.educationLevel && (
-                          <p><strong>Education:</strong> {kid.educationLevel}</p>
-                        )}
-                        
-                        {kid.specialNeeds && (
-                          <div className="kid-section">
-                            <p><strong>Special Needs:</strong></p>
-                            <p>{kid.specialNeeds}</p>
+                        <div className="kid-actions">
+                          <button 
+                            className="btn view-btn" 
+                            onClick={() => viewChildWallet(wallet.childId)}
+                          >
+                            View Wallet
+                          </button>
+                          
+                          <div className="deposit-form">
+                            <input 
+                              type="number" 
+                              placeholder="Amount (ETH)" 
+                              min="0.001"
+                              step="0.001"
+                              id={`deposit-${wallet.childId}`}
+                            />
+                            <button 
+                              className="btn deposit-btn"
+                              onClick={() => {
+                                const amount = document.getElementById(`deposit-${wallet.childId}`).value;
+                                depositToChildWallet(wallet.childId, amount);
+                              }}
+                            >
+                              Deposit
+                            </button>
                           </div>
-                        )}
-                        
-                        {kid.medicalInfo && (
-                          <div className="kid-section">
-                            <p><strong>Medical Info:</strong></p>
-                            <p>{kid.medicalInfo}</p>
-                          </div>
-                        )}
-                        
-                        {kid.notes && (
-                          <div className="kid-section">
-                            <p><strong>Notes:</strong></p>
-                            <p>{kid.notes}</p>
-                          </div>
-                        )}
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
               <div className="form-buttons">
+                <button type="button" className="btn cancel-btn" onClick={hideAllForms}>Close</button>
+              </div>
+            </div>
+          )}
+
+          {activeForm === 'childWallet' && selectedChild && (
+            <div className="wallet-details">
+              <h2>{selectedChild.childName}'s Wallet</h2>
+              
+              <div className="wallet-info">
+                <p><strong>Wallet Address:</strong> {selectedChild.walletAddress}</p>
+                <p><strong>Current Balance:</strong> {selectedChild.balance.toFixed(4)} ETH</p>
+              </div>
+              
+              <h3>Transaction History</h3>
+              {selectedChild.transactions.length === 0 ? (
+                <p>No transactions yet.</p>
+              ) : (
+                <div className="transaction-list">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Amount (ETH)</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedChild.transactions.map((tx, index) => (
+                        <tr key={index} className={tx.type}>
+                          <td>{tx.date}</td>
+                          <td>{tx.type.charAt(0).toUpperCase() + tx.type.slice(1)}</td>
+                          <td>{tx.amount.toFixed(4)}</td>
+                          <td>{tx.description}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              
+              <div className="wallet-deposit">
+                <h3>Make a Deposit</h3>
+                <div className="deposit-form-large">
+                  <input 
+                    type="number" 
+                    placeholder="Amount (ETH)" 
+                    min="0.001"
+                    step="0.001"
+                    id="wallet-deposit-amount"
+                  />
+                  <button 
+                    className="btn deposit-btn"
+                    onClick={() => {
+                      const amount = document.getElementById("wallet-deposit-amount").value;
+                      depositToChildWallet(selectedChild.childId, amount);
+                    }}
+                  >
+                    Deposit Funds
+                  </button>
+                </div>
+              </div>
+              
+              <div className="form-buttons">
+                <button type="button" className="btn back-btn" onClick={() => setActiveForm('kids')}>Back to Children</button>
                 <button type="button" className="btn cancel-btn" onClick={hideAllForms}>Close</button>
               </div>
             </div>
