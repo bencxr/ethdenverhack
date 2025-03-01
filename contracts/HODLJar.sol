@@ -13,18 +13,13 @@ import "./HODLJarListing.sol";
  * @dev ERC4626 compliant contract representing a single HODL jar for a foster kid
  */
 contract HODLJar is ERC4626, ReentrancyGuard {
-    struct Kid {
-        string name;
-        string story;
-        address fosterHome;
-        address donor;
-        uint256 age;
-        uint256 initialDeposit;
-        uint256 depositTimestamp;
-    }
-
-    // Single kid instance
-    Kid public kid;
+    string public kidname;
+    string public story;
+    address public fosterHome;
+    address public donor;
+    uint256 public age;
+    uint256 public initialDeposit;
+    uint256 public depositTimestamp;
 
     // USDC token contract
     IERC20 public immutable usdc;
@@ -40,7 +35,6 @@ contract HODLJar is ERC4626, ReentrancyGuard {
     address public hodlJarListing;
 
     // Events
-    event KidCreated(string name, address fosterHome, uint256 age);
     event DonationReceived(address donor, uint256 amount);
     event YieldWithdrawn(address fosterHome, uint256 amount);
     event PrincipalWithdrawn(address fosterHome, uint256 amount);
@@ -48,7 +42,7 @@ contract HODLJar is ERC4626, ReentrancyGuard {
     /**
      * @dev Constructor to initialize the HODL jar
      * @param _usdc Address of the USDC token contract
-     * @param _name Kid's name
+     * @param _kidname Kid's name
      * @param _story Kid's story
      * @param _age Kid's age
      * @param _fosterHome Address of the foster home
@@ -56,7 +50,7 @@ contract HODLJar is ERC4626, ReentrancyGuard {
      */
     constructor(
         address _usdc,
-        string memory _name,
+        string memory _kidname,
         string memory _story,
         uint256 _age,
         address _fosterHome,
@@ -64,12 +58,12 @@ contract HODLJar is ERC4626, ReentrancyGuard {
     )
         ERC4626(IERC20(_usdc))
         ERC20(
-            string.concat("HODL Jar - ", _name),
-            string.concat("HODL-", _name)
+            string.concat("HODL Jar - ", _kidname),
+            string.concat("HODL-", _kidname)
         )
     {
         require(_usdc != address(0), "Invalid USDC address");
-        require(bytes(_name).length > 0, "Name cannot be empty");
+        require(bytes(_kidname).length > 0, "Name cannot be empty");
         require(_fosterHome != address(0), "Invalid foster home address");
         require(_age > 0 && _age < 18, "Age must be between 1 and 17");
         require(_hodlJarListing != address(0), "Invalid listing address");
@@ -77,18 +71,15 @@ contract HODLJar is ERC4626, ReentrancyGuard {
         usdc = IERC20(_usdc);
         hodlJarListing = _hodlJarListing;
 
-        kid = Kid({
-            name: _name,
-            story: _story,
-            fosterHome: _fosterHome,
-            donor: address(0),
-            age: _age,
-            initialDeposit: 0,
-            depositTimestamp: 0
-        });
+        kidname = _kidname;
+        story = _story;
+        fosterHome = _fosterHome;
+        donor = address(0);
+        age = _age;
+        initialDeposit = 0;
+        depositTimestamp = 0;
 
-        emit KidCreated(_name, _fosterHome, _age);
-        HODLJarListing(hodlJarListing).addHODLJar(address(this));
+        HODLJarListing(hodlJarListing).addHODLJar();
     }
 
     /**
@@ -98,7 +89,7 @@ contract HODLJar is ERC4626, ReentrancyGuard {
         uint256 assets,
         address receiver
     ) public virtual override returns (uint256) {
-        require(kid.donor == address(0), "HODL jar already has a donor");
+        require(donor == address(0), "HODL jar already has a donor");
         require(
             assets == DONATION_AMOUNT,
             "Must deposit exact donation amount"
@@ -106,9 +97,9 @@ contract HODLJar is ERC4626, ReentrancyGuard {
 
         uint256 shares = super.deposit(assets, receiver);
 
-        kid.donor = msg.sender;
-        kid.initialDeposit = assets;
-        kid.depositTimestamp = block.timestamp;
+        donor = msg.sender;
+        initialDeposit = assets;
+        depositTimestamp = block.timestamp;
 
         // Update the listing contract
         HODLJarListing(hodlJarListing).updateSponsorshipStatus();
@@ -125,10 +116,9 @@ contract HODLJar is ERC4626, ReentrancyGuard {
         address receiver,
         address owner
     ) public virtual override returns (uint256) {
-        require(msg.sender == kid.fosterHome, "Only foster home can withdraw");
+        require(msg.sender == fosterHome, "Only foster home can withdraw");
         require(
-            block.timestamp >=
-                kid.depositTimestamp + ((18 - kid.age) * 365 days),
+            block.timestamp >= depositTimestamp + ((18 - age) * 365 days),
             "Cannot withdraw until kid turns 18"
         );
 
@@ -182,15 +172,15 @@ contract HODLJar is ERC4626, ReentrancyGuard {
      * @return Current yield amount
      */
     function getCurrentYield() external view returns (uint256) {
-        require(kid.donor != address(0), "HODL jar has no donor");
+        require(donor != address(0), "HODL jar has no donor");
 
         uint256 currentBalance = moreMarkets.getBalance(
             address(this),
             address(usdc)
         );
         return
-            currentBalance > kid.initialDeposit
-                ? currentBalance - kid.initialDeposit
+            currentBalance > initialDeposit
+                ? currentBalance - initialDeposit
                 : 0;
     }
 
@@ -207,7 +197,7 @@ contract HODLJar is ERC4626, ReentrancyGuard {
      * @return Boolean indicating if kid has been sponsored
      */
     function isSponsored() external view returns (bool) {
-        return kid.donor != address(0);
+        return donor != address(0);
     }
 
     /**
@@ -215,8 +205,7 @@ contract HODLJar is ERC4626, ReentrancyGuard {
      * @return Time remaining in seconds
      */
     function getLockTimeRemaining() external view returns (uint256) {
-        uint256 lockEndTime = kid.depositTimestamp +
-            ((18 - kid.age) * 365 days);
+        uint256 lockEndTime = depositTimestamp + ((18 - age) * 365 days);
         return
             block.timestamp >= lockEndTime ? 0 : lockEndTime - block.timestamp;
     }

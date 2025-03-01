@@ -18,7 +18,7 @@ contract HODLJarListing {
     mapping(address => bool) public isRegisteredJar;
 
     // Events
-    event HODLJarAdded(address indexed jarAddress, string kidName);
+    event HODLJarAdded(address indexed jarAddress);
     event HODLJarSponsored(address indexed jarAddress, address indexed donor);
 
     /**
@@ -28,19 +28,15 @@ contract HODLJarListing {
 
     /**
      * @dev Add a new HODL jar to the listing
-     * @param jarAddress Address of the newly created HODL jar
      */
-    function addHODLJar(address jarAddress) external {
-        require(jarAddress != address(0), "Invalid jar address");
-        require(!isRegisteredJar[jarAddress], "Jar already registered");
-
-        HODLJar jar = HODLJar(jarAddress);
-        (string memory kidName, , , , , , ) = jar.kid();
+    function addHODLJar() external {
+        address jarAddress = msg.sender;
+        // require(!isRegisteredJar[jarAddress], "Jar already registered");
 
         hodlJars.push(jarAddress);
         isRegisteredJar[jarAddress] = true;
 
-        emit HODLJarAdded(jarAddress, kidName);
+        emit HODLJarAdded(jarAddress);
     }
 
     /**
@@ -54,7 +50,7 @@ contract HODLJarListing {
         require(!isSponsored[msg.sender], "Jar already marked as sponsored");
 
         HODLJar jar = HODLJar(msg.sender);
-        (, , , address donor, , , ) = jar.kid();
+        address donor = jar.donor();
 
         require(donor != address(0), "Jar has no donor");
 
