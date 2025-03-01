@@ -80,12 +80,11 @@ export function HODLJarForm({ onSubmit, isSubmitting }) {
         )}
       </div>
 
-      <button 
+      <button
         type="submit"
         disabled={isSubmitting}
-        className={`bg-blue-500 text-white rounded p-2 ${
-          isSubmitting ? 'opacity-50' : 'hover:bg-blue-600'
-        }`}
+        className={`bg-blue-500 text-white rounded p-2 ${isSubmitting ? 'opacity-50' : 'hover:bg-blue-600'
+          }`}
       >
         {isSubmitting ? 'Confirm in Wallet...' : 'Create HODL Jar'}
       </button>
