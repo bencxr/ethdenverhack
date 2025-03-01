@@ -150,7 +150,7 @@ export function HODLJarListingsPage() {
       <NavBar />
       <div className="hodl-jar-listings-page">
         <header className="page-header">
-          <h1>Support the future of web3</h1>
+          <h1>Your donations supports sustainable financial impact</h1>
           <h1>One HODL Jar at a time</h1>
         </header>
 
