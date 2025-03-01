@@ -1,17 +1,17 @@
-"use client"
+"use client";
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
-import { useDynamicContext } from "@dynamic-labs/sdk-react-core"
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   story: z.string().min(10, "Story must be at least 10 characters"),
   imageUrl: z.string().url("Must be a valid URL"),
   age: z.number().min(0).max(18),
-  fosterHome: z.string().startsWith("0x", "Must be a valid Ethereum address")
-})
+  fosterHome: z.string().startsWith("0x", "Must be a valid Ethereum address"),
+});
 
 export function HODLJarForm({ onSubmit, isSubmitting }) {
   const { primaryWallet } = useDynamicContext();
@@ -19,7 +19,7 @@ export function HODLJarForm({ onSubmit, isSubmitting }) {
   const {
     register,
     handleSubmit,
-    formState: { errors }
+    formState: { errors },
   } = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -27,12 +27,15 @@ export function HODLJarForm({ onSubmit, isSubmitting }) {
       story: "",
       age: 0,
       fosterHome: primaryWallet?.address || "0x",
-      imageUrl: ""
-    }
-  })
+      imageUrl: "",
+    },
+  });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4 max-w-md">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="flex flex-col gap-4 max-w-md"
+    >
       <div className="flex flex-col">
         <label htmlFor="name">Child's Name</label>
         <input
@@ -56,7 +59,9 @@ export function HODLJarForm({ onSubmit, isSubmitting }) {
           placeholder="https://example.com/image.jpg"
         />
         {errors.imageUrl && (
-          <span className="text-red-500 text-sm">{errors.imageUrl.message}</span>
+          <span className="text-red-500 text-sm">
+            {errors.imageUrl.message}
+          </span>
         )}
       </div>
 
@@ -95,18 +100,21 @@ export function HODLJarForm({ onSubmit, isSubmitting }) {
           className="border rounded p-2"
         />
         {errors.fosterHome && (
-          <span className="text-red-500 text-sm">{errors.fosterHome.message}</span>
+          <span className="text-red-500 text-sm">
+            {errors.fosterHome.message}
+          </span>
         )}
       </div>
 
       <button
         type="submit"
         disabled={isSubmitting}
-        className={`bg-blue-500 text-white rounded p-2 ${isSubmitting ? 'opacity-50' : 'hover:bg-blue-600'
-          }`}
+        className={`bg-blue-500 text-white rounded p-2 ${
+          isSubmitting ? "opacity-50" : "hover:bg-blue-600"
+        }`}
       >
-        {isSubmitting ? 'Confirm in Wallet...' : 'Create HODL Jar'}
+        {isSubmitting ? "Confirm in Wallet..." : "Create HODL Jar"}
       </button>
     </form>
-  )
+  );
 }
