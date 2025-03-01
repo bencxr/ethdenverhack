@@ -66,6 +66,7 @@ export async function fetchAllCollectionNFTs(wallet) {
                 metadata,
                 name: metadata.name,
                 description: metadata.description,
+                jarId: metadata.attributes?.find(attr => attr.trait_type === "Jar ID")?.value,
                 image: metadata.image?.replace('ipfs://', 'https://ipfs.io/ipfs/')
             });
         }

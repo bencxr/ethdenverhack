@@ -59,6 +59,7 @@
 }
 
 .nft-token-id,
+.nft-jar-id,
 .nft-contract {
     font-size: 12px;
     color: var(--text-secondary, #666);

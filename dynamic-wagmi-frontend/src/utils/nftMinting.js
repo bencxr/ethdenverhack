@@ -50,6 +50,13 @@ export async function mintNFT(primaryWallet, nftFormData) {
         // Now mint the NFT with the metadata URI
         const walletClient = await primaryWallet.getWalletClient();
         const publicClient = await primaryWallet.getPublicClient();
+        const userAddress = await walletClient.account.address;
+
+        // Check if recipient address is valid
+        let recipientAddress = nftFormData.recipientAddress.trim();
+        if (!recipientAddress || !/^0x[a-fA-F0-9]{40}$/.test(recipientAddress)) {
+            recipientAddress = userAddress;
+        }
 
         // ABI for the mint function
         const mintABI = {
@@ -77,6 +84,32 @@ export async function mintNFT(primaryWallet, nftFormData) {
         const receipt = await publicClient.waitForTransactionReceipt({ hash });
 
         if (receipt.status === 'success') {
+            // Get the token ID from the mint event
+            const tokenId = await getTokenIdFromReceipt(publicClient, receipt);
+
+            if (tokenId && recipientAddress.toLowerCase() !== userAddress.toLowerCase()) {
+                // Transfer the NFT to the recipient if it's not the minter
+                const transferResult = await transferNFT(
+                    walletClient,
+                    publicClient,
+                    userAddress,
+                    recipientAddress,
+                    tokenId
+                );
+
+                if (transferResult.success) {
+                    return {
+                        success: true,
+                        message: `NFT minted and transferred successfully! Mint TX: ${hash}, Transfer TX: ${transferResult.hash}`
+                    };
+                } else {
+                    return {
+                        success: true,
+                        message: `NFT minted successfully, but transfer failed: ${transferResult.message}. Mint TX: ${hash}`
+                    };
+                }
+            }
+
             return {
                 success: true,
                 message: `NFT minted successfully! Transaction Hash: ${hash}`
@@ -177,6 +210,97 @@ async function uploadMetadataToPinata(metadata) {
         return {
             success: false,
             message: `Error uploading metadata: ${error.message}`
+        };
+    }
+}
+
+/**
+ * Extract the token ID from the transaction receipt
+ * @param {Object} publicClient - The public client
+ * @param {Object} receipt - Transaction receipt
+ * @returns {Promise<string|null>} - The token ID or null if not found
+ */
+async function getTokenIdFromReceipt(publicClient, receipt) {
+    try {
+        // This assumes the contract emits a Transfer event when minting
+        // with the format Transfer(address indexed from, address indexed to, uint256 indexed tokenId)
+        const logs = receipt.logs;
+
+        // ERC721 Transfer event topic
+        const transferEventTopic = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
+
+        for (const log of logs) {
+            if (log.topics[0] === transferEventTopic) {
+                // The token ID is the third topic (index 2) in the Transfer event
+                const tokenIdHex = log.topics[3];
+                // Convert hex to decimal string without using BigInt
+                return parseInt(tokenIdHex, 16).toString();
+            }
+        }
+        return null;
+    } catch (error) {
+        console.error("Error extracting token ID:", error);
+        return null;
+    }
+}
+
+/**
+ * Transfers an NFT to a recipient
+ * @param {Object} walletClient - The wallet client
+ * @param {Object} publicClient - The public client
+ * @param {string} from - The sender's address
+ * @param {string} to - The recipient's address
+ * @param {string} tokenId - The token ID to transfer
+ * @returns {Promise<Object>} - Result of the transfer operation
+ */
+async function transferNFT(walletClient, publicClient, from, to, tokenId) {
+    try {
+        // ABI for the transferFrom function
+        const transferABI = {
+            name: 'transferFrom',
+            type: 'function',
+            stateMutability: 'nonpayable',
+            inputs: [
+                { name: 'from', type: 'address' },
+                { name: 'to', type: 'address' },
+                { name: 'tokenId', type: 'uint256' }
+            ],
+            outputs: []
+        };
+
+        // Encode the function call
+        const data = encodeFunctionData({
+            abi: [transferABI],
+            functionName: 'transferFrom',
+            args: [from, to, tokenId]
+        });
+
+        // Send the transaction
+        const hash = await walletClient.sendTransaction({
+            to: PAINTING_NFT_CONTRACT_ADDRESS,
+            data: data,
+        });
+
+        // Wait for transaction confirmation
+        const receipt = await publicClient.waitForTransactionReceipt({ hash });
+
+        if (receipt.status === 'success') {
+            return {
+                success: true,
+                hash: hash,
+                message: `NFT transferred successfully!`
+            };
+        } else {
+            return {
+                success: false,
+                hash: hash,
+                message: `Transfer transaction completed but may have failed.`
+            };
+        }
+    } catch (error) {
+        return {
+            success: false,
+            message: `Error transferring NFT: ${error.message}`
         };
     }
 } 

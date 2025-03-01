@@ -7,7 +7,8 @@ export function NFTMintingForm({ onSubmit, onCancel }) {
         description: '',
         jarId: '',
         animal: '',
-        image: null
+        image: null,
+        recipientAddress: ''
     });
 
     function handleChange(e) {
@@ -87,6 +88,19 @@ export function NFTMintingForm({ onSubmit, onCancel }) {
                         required
                     />
                 </div>
+                <div className="form-group">
+                    <label htmlFor="recipientAddress">Recipient Address:</label>
+                    <input
+                        type="text"
+                        id="recipientAddress"
+                        name="recipientAddress"
+                        value={formData.recipientAddress}
+                        onChange={handleChange}
+                        placeholder="0x..."
+                        required
+                    />
+                </div>
+
                 <button type="submit" className="btn btn-primary">Create and Mint NFT</button>
                 <button type="button" className="btn btn-secondary" onClick={onCancel}>Cancel</button>
             </form>

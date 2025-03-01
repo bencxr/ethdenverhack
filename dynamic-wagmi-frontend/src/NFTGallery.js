@@ -35,6 +35,9 @@ export const NFTGallery = ({ nfts, isLoading }) => {
                             {nft.tokenId && (
                                 <p className="nft-token-id">Token ID: {nft.tokenId}</p>
                             )}
+                            {nft.jarId && (
+                                <p className="nft-jar-id">Jar ID: {nft.jarId}</p>
+                            )}
                             {nft.contractAddress && (
                                 <p className="nft-contract">
                                     Contract: <a
