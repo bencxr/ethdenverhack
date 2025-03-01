@@ -76,9 +76,9 @@ const KryptoKidsLanding = () => {
       <NavBar />
 
       <main>
-        <h1>Empower Foster Kids with Crypto</h1>
+        <h1>Sustainable support for foster youth</h1>
         <p className="subtitle">
-          Create lasting impact through smart-contract staking and unique NFT
+          Create lasting impact through DeFi yield and receive unique NFT
           art
         </p>
         <div className="cta-form">
