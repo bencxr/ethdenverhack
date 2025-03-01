@@ -151,7 +151,7 @@ export function HODLJarListingsPage() {
       <div className="hodl-jar-listings-page">
         <header className="page-header">
           <h1>Support the future of web3</h1>
-          <h1>One donation at a time</h1>
+          <h1>One HODL Jar at a time</h1>
         </header>
 
         {error && (
