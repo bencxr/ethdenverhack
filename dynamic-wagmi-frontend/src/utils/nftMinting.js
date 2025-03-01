@@ -122,7 +122,7 @@ async function uploadImageToPinata(imageFile) {
             return {
                 success: true,
                 ipfsHash: data.IpfsHash,
-                ipfsUrl: `https://${data.IpfsHash}.ipfs.w3s.link`
+                ipfsUrl: `https://sapphire-known-spoonbill-176.mypinata.cloud/ipfs/${data.IpfsHash}`
             };
         } else {
             return {
@@ -165,7 +165,7 @@ async function uploadMetadataToPinata(metadata) {
             return {
                 success: true,
                 ipfsHash: data.IpfsHash,
-                ipfsUrl: `https://${data.IpfsHash}.ipfs.w3s.link`
+                ipfsUrl: `https://sapphire-known-spoonbill-176.mypinata.cloud/ipfs/${data.IpfsHash}`
             };
         } else {
             return {

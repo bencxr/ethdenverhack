@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-contract NFTCollection is ERC721, Ownable {
+contract NFTCollection is ERC721Enumerable, Ownable {
     using Strings for uint256;
 
     // Mapping to store token URIs
@@ -40,8 +40,8 @@ contract NFTCollection is ERC721, Ownable {
 
     // Function to mint new NFT (only whitelisted addresses)
     function mint(string calldata uri) external {
-        require(whitelist[msg.sender], "Address is not whitelisted");
-
+        // require(whitelist[msg.sender], "Address is not whitelisted");
+        // TODO: Remove this once we have a proper whitelist
         uint256 tokenId = _tokenIdCounter;
         _tokenIdCounter++;
 

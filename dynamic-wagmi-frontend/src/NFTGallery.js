@@ -12,7 +12,7 @@ export const NFTGallery = ({ nfts, isLoading }) => {
 
     return (
         <div className="nft-gallery">
-            <h2>Your NFT Paintings</h2>
+            <h2>Some Paintings Gifted to our HODL Jar Sponsors</h2>
             <div className="nft-grid">
                 {nfts.map((nft, index) => (
                     <div key={index} className="nft-card">
