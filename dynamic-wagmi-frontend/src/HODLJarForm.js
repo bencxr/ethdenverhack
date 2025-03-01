@@ -3,15 +3,19 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
+import { useDynamicContext } from "@dynamic-labs/sdk-react-core"
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   story: z.string().min(10, "Story must be at least 10 characters"),
+  imageUrl: z.string().url("Must be a valid URL"),
   age: z.number().min(0).max(18),
   fosterHome: z.string().startsWith("0x", "Must be a valid Ethereum address")
 })
 
 export function HODLJarForm({ onSubmit, isSubmitting }) {
+  const { primaryWallet } = useDynamicContext();
+
   const {
     register,
     handleSubmit,
@@ -22,7 +26,8 @@ export function HODLJarForm({ onSubmit, isSubmitting }) {
       name: "",
       story: "",
       age: 0,
-      fosterHome: "0x"
+      fosterHome: primaryWallet?.address || "0x",
+      imageUrl: ""
     }
   })
 
@@ -38,6 +43,20 @@ export function HODLJarForm({ onSubmit, isSubmitting }) {
         />
         {errors.name && (
           <span className="text-red-500 text-sm">{errors.name.message}</span>
+        )}
+      </div>
+
+      <div className="flex flex-col">
+        <label htmlFor="imageUrl">Image URL</label>
+        <input
+          id="imageUrl"
+          type="text"
+          {...register("imageUrl")}
+          className="border rounded p-2"
+          placeholder="https://example.com/image.jpg"
+        />
+        {errors.imageUrl && (
+          <span className="text-red-500 text-sm">{errors.imageUrl.message}</span>
         )}
       </div>
 

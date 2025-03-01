@@ -1,30 +1,68 @@
-// This script deploys the HODL jar system on Flow EVM
+// This script creates HODLJars using the deployed HODLJarFactory
 const hre = require("hardhat");
 
 async function main() {
-  console.log("Deploying HODL jar system...");
+  console.log("Creating HODLJars using factory...");
 
-  // Get the contract factory
-  const HODLJar = await hre.ethers.getContractFactory("HODLJar");
+  // Factory address
+  const factoryAddress = "0xCA1008F2153F8f086EA89844Dc1336C63DA2f87A";
+  console.log("Using HODLJarFactory at:", factoryAddress);
 
-  // Use existing contract addresses instead of deploying mocks
-  const usdcAddress = "0xF1815bd50389c46847f0Bda824eC8da914045D14";
-  const hodlJarListingAddress = "0xE1e4514c4eDaFD43d6bCB073EB3bB3515f8C479c";
-  const fosterHomeAddress = "0x4Ab9B0FD0B98549fe3eEc614109D93553E8235B1";
+  // Get the factory contract instance
+  const hodlJarFactory = await hre.ethers.getContractAt("HODLJarFactory", factoryAddress);
 
-  console.log("Using USDC at:", usdcAddress);
+  // Sample jar data
+  const jars = [
+    {
+      kidname: "Emma",
+      imageurl: "https://example.com/emma.jpg",
+      story: "Emma is a bright 8-year-old who loves reading and science experiments.",
+      age: 8,
+      fosterHome: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8" // Replace with actual foster home address
+    },
+    {
+      kidname: "Liam",
+      imageurl: "https://example.com/liam.jpg",
+      story: "Liam is a creative 10-year-old who enjoys art and building things.",
+      age: 10,
+      fosterHome: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8" // Replace with actual foster home address
+    }
+  ];
 
-  // Deploy the HODL jar contract
-  const hodlJar = await HODLJar.deploy(
-    usdcAddress,                      // _usdc
-    "Benny",                          // _name
-    "This is Benny's story",  // _story
-    3, // _age
-    fosterHomeAddress, // _fosterHome
-    hodlJarListingAddress // hodlJarListing
-  );
-  await hodlJar.waitForDeployment();
-  console.log("HODL Jar deployed to:", await hodlJar.getAddress());
+  // Create jars
+  for (const jar of jars) {
+    console.log(`Creating jar for ${jar.kidname}...`);
+
+    const tx = await hodlJarFactory.createHODLJar(
+      jar.kidname,
+      jar.imageurl,
+      jar.story,
+      jar.age,
+      jar.fosterHome
+    );
+
+    const receipt = await tx.wait();
+
+    // Find the HODLJarCreated event to get the jar address
+    const event = receipt.logs
+      .filter(log => log.fragment && log.fragment.name === 'HODLJarCreated')
+      .map(log => hodlJarFactory.interface.parseLog(log))[0];
+
+    if (event) {
+      const jarAddress = event.args.jarAddress;
+      console.log(`Jar for ${jar.kidname} created at: ${jarAddress}`);
+    } else {
+      console.log(`Jar for ${jar.kidname} created, but couldn't find address in events`);
+    }
+  }
+
+  // Get total jars count
+  const totalJars = await hodlJarFactory.getTotalJars();
+  console.log(`\nTotal jars created: ${totalJars}`);
+
+  // Get all jar addresses
+  const allJars = await hodlJarFactory.getAllHODLJars();
+  console.log("All jar addresses:", allJars);
 }
 
 main().catch((error) => {

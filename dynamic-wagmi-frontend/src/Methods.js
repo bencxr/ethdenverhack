@@ -5,6 +5,7 @@ import { parseEther } from 'viem';
 import { mintNFT as mintNFTUtil } from './utils/nftMinting';
 import { createHODLJar } from './utils/hodlJarCreation';
 import { HODLJarForm } from './HODLJarForm';
+import { NFTMintingForm } from './NFTMintingForm';
 
 import './Methods.css';
 
@@ -16,13 +17,6 @@ export default function DynamicMethods({ isDarkMode }) {
   const [result, setResult] = useState('');
   const [isCreatingJar, setIsCreatingJar] = useState(false);
   const [showNftForm, setShowNftForm] = useState(false);
-  const [nftFormData, setNftFormData] = useState({
-    name: '',
-    description: '',
-    age: '',
-    animal: '',
-    image: null
-  });
 
   const safeStringify = (obj) => {
     const seen = new WeakSet();
@@ -92,33 +86,17 @@ export default function DynamicMethods({ isDarkMode }) {
     }
   }
 
-  function handleNftFormChange(e) {
-    const { name, value, files } = e.target;
-    if (name === 'image' && files && files[0]) {
-      setNftFormData({
-        ...nftFormData,
-        image: files[0]
-      });
-    } else {
-      setNftFormData({
-        ...nftFormData,
-        [name]: value
-      });
-    }
+  function toggleNftForm() {
+    setShowNftForm(!showNftForm);
   }
 
-  async function handleNftFormSubmit(e) {
-    e.preventDefault();
+  async function handleNftFormSubmit(nftFormData) {
     if (!primaryWallet || !isEthereumWallet(primaryWallet)) return;
 
     setResult("Preparing NFT metadata and initiating minting...");
     const result = await mintNFTUtil(primaryWallet, nftFormData);
     setResult(result.message);
     setShowNftForm(false);
-  }
-
-  function toggleNftForm() {
-    setShowNftForm(!showNftForm);
   }
 
   async function testPinataAuth() {
@@ -172,65 +150,11 @@ export default function DynamicMethods({ isDarkMode }) {
           </div>
 
           {showNftForm && (
-            <div className="nft-form-container">
-              <form onSubmit={handleNftFormSubmit}>
-                <div className="form-group">
-                  <label htmlFor="name">Name:</label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={nftFormData.name}
-                    onChange={handleNftFormChange}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="description">Description:</label>
-                  <textarea
-                    id="description"
-                    name="description"
-                    value={nftFormData.description}
-                    onChange={handleNftFormChange}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="age">Age:</label>
-                  <input
-                    type="text"
-                    id="age"
-                    name="age"
-                    value={nftFormData.age}
-                    onChange={handleNftFormChange}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="animal">Animal:</label>
-                  <input
-                    type="text"
-                    id="animal"
-                    name="animal"
-                    value={nftFormData.animal}
-                    onChange={handleNftFormChange}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="image">Image:</label>
-                  <input
-                    type="file"
-                    id="image"
-                    name="image"
-                    onChange={handleNftFormChange}
-                    accept="image/*"
-                    required
-                  />
-                </div>
-                <button type="submit" className="btn btn-primary">Create and Mint NFT</button>
-                <button type="button" className="btn btn-secondary" onClick={toggleNftForm}>Cancel</button>
-              </form>
+            <div className="form-container">
+              <NFTMintingForm
+                onSubmit={handleNftFormSubmit}
+                onCancel={toggleNftForm}
+              />
             </div>
           )}
 
