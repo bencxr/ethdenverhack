@@ -31,13 +31,13 @@ export function HODLJarListingsPage() {
     async function loadHODLJars() {
       try {
         setIsLoading(true);
-        
+
         // Skip fetching if wallet isn't ready yet, but don't show an error
         if (!primaryWallet) {
           setIsLoading(false);
           return; // Just return without setting an error
         }
-        
+
         const result = await fetchAllHODLJars(primaryWallet);
 
         if (result.success) {
@@ -136,10 +136,7 @@ export function HODLJarListingsPage() {
       <NavBar />
       <div className="hodl-jar-listings-page">
         <header className="page-header">
-          <h1>HODL Jar Listings</h1>
-          <p className="subtitle">
-            Support projects by donating USDC to these HODL jars
-          </p>
+          <h1>Support the future of web3, one donation at a time.</h1>
         </header>
 
         {error && (
