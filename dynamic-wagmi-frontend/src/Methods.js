@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDynamicContext, useIsLoggedIn, useUserWallets } from "@dynamic-labs/sdk-react-core";
 import { isEthereumWallet } from '@dynamic-labs/ethereum'
 import { parseEther } from 'viem';
+import { mintNFT as mintNFTUtil } from './utils/nftMinting';
 
 import './Methods.css';
 
@@ -97,6 +98,14 @@ export default function DynamicMethods({ isDarkMode }) {
     }
   }
 
+  async function mintNFT() {
+    if (!primaryWallet || !isEthereumWallet(primaryWallet)) return;
+
+    setResult("Initiating NFT minting...");
+    const result = await mintNFTUtil(primaryWallet);
+    setResult(result.message);
+  }
+
   return (
     <>
       {!isLoading && (
@@ -113,6 +122,7 @@ export default function DynamicMethods({ isDarkMode }) {
                 <button className="btn btn-primary" onClick={signEthereumMessage}>Sign "Hello World" on Ethereum</button>
                 <button className="btn btn-primary" onClick={showBalance}>Show Balance</button>
                 <button className="btn btn-primary" onClick={sendEth}>Send 0.01 ETH</button>
+                <button className="btn btn-primary" onClick={mintNFT}>Mint NFT</button>
               </>
             }
 
