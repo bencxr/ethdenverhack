@@ -5,8 +5,12 @@ import { createConfig, WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { http } from "viem";
 import { mainnet } from "viem/chains";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Main from "./Main";
-
+import KryptoKidsLanding from "./landingPage";
+import { NFTGalleryPage } from "./.nftPage";
+import { HODLJarListingsPage } from "./mainPage";
+import FosterHomeManagement from "./foster";
 
 const config = createConfig({
   chains: [mainnet],
@@ -29,7 +33,15 @@ const App = () => (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <DynamicWagmiConnector>
-          <Main />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/dashboard" element={<Main />} />
+              <Route path="/" element={<KryptoKidsLanding />} />
+              <Route path="/nfts" element={<NFTGalleryPage />} />
+              <Route path="main" element={<HODLJarListingsPage />} />
+              <Route path="foster" element={<FosterHomeManagement />} />
+            </Routes>
+          </BrowserRouter>
         </DynamicWagmiConnector>
       </QueryClientProvider>
     </WagmiProvider>
