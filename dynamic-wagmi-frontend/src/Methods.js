@@ -47,15 +47,26 @@ export default function DynamicMethods({ isDarkMode }) {
     setResult('');
   }
 
+  // Helper function to hide all forms and clear result
+  function hideAllForms() {
+    setShowNftForm(false);
+    setIsCreatingJar(false);
+    setShowJars(false);
+    setResult(''); // Clear the result message when switching methods
+  }
+
   function showUser() {
+    hideAllForms();
     setResult(safeStringify(user));
   }
 
   function showUserWallets() {
+    hideAllForms();
     setResult(safeStringify(userWallets));
   }
 
   async function fetchWalletClient() {
+    hideAllForms();
     if (!primaryWallet || !isEthereumWallet(primaryWallet)) return;
 
     const walletClient = await primaryWallet.getWalletClient();
@@ -63,6 +74,7 @@ export default function DynamicMethods({ isDarkMode }) {
   }
 
   async function showBalance() {
+    hideAllForms();
     if (!primaryWallet || !isEthereumWallet(primaryWallet)) return;
 
     const publicClient = await primaryWallet.getPublicClient();
@@ -76,6 +88,7 @@ export default function DynamicMethods({ isDarkMode }) {
   }
 
   async function sendEth() {
+    hideAllForms();
     if (!primaryWallet || !isEthereumWallet(primaryWallet)) return;
 
     try {
@@ -91,7 +104,8 @@ export default function DynamicMethods({ isDarkMode }) {
   }
 
   function toggleNftForm() {
-    setShowNftForm(!showNftForm);
+    hideAllForms();
+    setShowNftForm(true);
   }
 
   async function handleNftFormSubmit(nftFormData) {
@@ -103,24 +117,6 @@ export default function DynamicMethods({ isDarkMode }) {
     setShowNftForm(false);
   }
 
-  async function testPinataAuth() {
-    try {
-      setResult('Fetching Pinata authentication status...');
-
-      const response = await fetch('https://api.pinata.cloud/data/testAuthentication', {
-        method: 'GET',
-        headers: {
-          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI5ZTgxZjExZi1kN2M3LTQ0OTYtYmJjYy03YTJjNmJmM2RlYzUiLCJlbWFpbCI6ImJlbmN4ckBmcmFnbmV0aWNzLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaW5fcG9saWN5Ijp7InJlZ2lvbnMiOlt7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6IkZSQTEifSx7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6Ik5ZQzEifV0sInZlcnNpb24iOjF9LCJtZmFfZW5hYmxlZCI6ZmFsc2UsInN0YXR1cyI6IkFDVElWRSJ9LCJhdXRoZW50aWNhdGlvblR5cGUiOiJzY29wZWRLZXkiLCJzY29wZWRLZXlLZXkiOiI2YmE1NDA4NTA4YTA2MWRhMGVkMyIsInNjb3BlZEtleVNlY3JldCI6IjY5ZDM4OGRlYmZiNTUzMDdlNjRjYzAzZmE1NzIwNjYyNjRjNDUwYzc5NjgxOTRkNThhYzc2MzFlMWRkYWEwN2YiLCJleHAiOjE3NzIzMjkzNzJ9.hc0kBix7t9PcdXlVqFL9gCPB6d87BQtIq6fg5yuzmF0'
-        }
-      });
-
-      const data = await response.json();
-      setResult(safeStringify(data));
-    } catch (error) {
-      setResult(`Error testing Pinata authentication: ${error.message}`);
-    }
-  }
-
   const handleCreateHODLJar = async (formData) => {
     setIsCreatingJar(true);
     const result = await createHODLJar(primaryWallet, formData);
@@ -129,6 +125,7 @@ export default function DynamicMethods({ isDarkMode }) {
   };
 
   async function fetchHODLJars() {
+    hideAllForms();
     if (!primaryWallet || !isEthereumWallet(primaryWallet)) return;
 
     setResult("Fetching HODL jars...");
@@ -143,26 +140,32 @@ export default function DynamicMethods({ isDarkMode }) {
     }
   }
 
+  // Update the HODL Jar button click handler
+  const toggleHODLJarForm = () => {
+    hideAllForms();
+    setIsCreatingJar(true);
+  };
+
   return (
     <>
       {!isLoading && (
         <div className="dynamic-methods" data-theme={isDarkMode ? 'dark' : 'light'}>
           <div className="methods-container">
-            <button className="btn btn-primary" onClick={showUser}>Fetch User</button>
-            <button className="btn btn-primary" onClick={showUserWallets}>Fetch User Wallets</button>
-            <button className="btn btn-primary" onClick={testPinataAuth}>Test Pinata Auth</button>
+            {/* <button className="btn btn-primary" onClick={showUser}>Fetch User</button>
+            <button className="btn btn-primary" onClick={showUserWallets}>Fetch User Wallets</button> */}
 
             {primaryWallet && isEthereumWallet(primaryWallet) &&
               <>
                 <button className="btn btn-primary" onClick={fetchWalletClient}>Fetch Wallet Client</button>
-                <button className="btn btn-primary" onClick={showBalance}>Show Balance</button>
                 <button className="btn btn-primary" onClick={sendEth}>Send 0.01 ETH</button>
-                <button className="btn btn-primary" onClick={toggleNftForm}>Mint NFT</button>
+
+                <button className="btn btn-primary" onClick={showBalance}>Show Balance</button>
+                <button className="btn btn-primary" onClick={toggleNftForm}>Upload painting as NFT</button>
                 <button
                   className="btn btn-primary"
-                  onClick={() => setIsCreatingJar(!isCreatingJar)}
+                  onClick={toggleHODLJarForm}
                 >
-                  {isCreatingJar ? 'Hide Form' : 'Create New HODL Jar'}
+                  Create New HODL Jar
                 </button>
                 <button className="btn btn-primary" onClick={fetchHODLJars}>
                   View All HODL Jars
