@@ -312,3 +312,25 @@
     align-items: center;
     justify-content: center;
   }
+
+
+  .filled-jar-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 10px;
+    background-color: rgba(0, 200, 0, 0.1);
+    border-radius: 8px;
+  }
+  
+  .green-tick {
+    color: #00c800;
+    font-size: 1.5rem;
+    margin-right: 8px;
+  }
+  
+  .filled-text {
+    font-weight: 600;
+    color: #00c800;
+  }

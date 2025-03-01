@@ -4,12 +4,22 @@
   padding: 2rem;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     sans-serif;
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
 }
 
 .gallery-header {
   text-align: center;
   margin-bottom: 3rem;
   margin-top: 3rem;
+  position: relative;
+  z-index: 1;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
 }
 
 .gallery-header h1 {
@@ -27,6 +37,8 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 2rem;
+  position: relative;
+  z-index: 1;
 }
 
 .nft-card {
@@ -36,11 +48,34 @@
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   background-color: #fff;
   cursor: pointer;
+  position: relative;
+  z-index: 1;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
 }
 
 .nft-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  animation: rainbow-border 2s linear infinite;
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  border: 3px solid transparent;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), 
+                    linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff, #ff0000);
+  background-size: 100% 100%, 200% 100%;
+}
+
+@keyframes rainbow-border {
+  0% {
+    background-position: 0% 0%, 0% 0%;
+  }
+  100% {
+    background-position: 0% 0%, 200% 0%;
+  }
 }
 
 .nft-image-container {
@@ -88,6 +123,13 @@
   align-items: center;
   justify-content: center;
   min-height: 300px;
+  position: relative;
+  z-index: 1;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
 }
 
 .loading-spinner {
@@ -116,6 +158,13 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
+  z-index: 1;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
 }
 
 .error-message p {
@@ -145,6 +194,13 @@
   background-color: #f9fafb;
   border-radius: 8px;
   margin: 2rem 0;
+  position: relative;
+  z-index: 1;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
 }
 
 .empty-collection h2 {
@@ -309,3 +365,88 @@
     font-size: 1.75rem;
   }
 }
+
+.animated-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background-color: #f8f9fa;
+  overflow: hidden;
+}
+
+.floating-shape {
+  position: absolute;
+  opacity: 0.15;
+  border-radius: 50%;
+  filter: blur(2px);
+  animation: float linear infinite;
+  z-index: -1;
+}
+
+.shape-0 {
+  width: 100px;
+  height: 100px;
+  background-color: #FF9AA2; /* soft red */
+}
+
+.shape-1 {
+  width: 120px;
+  height: 120px;
+  background-color: #FFB347; /* soft orange */
+}
+
+.shape-2 {
+  width: 80px;
+  height: 80px;
+  background-color: #B5EAD7; /* soft green */
+}
+
+.shape-3 {
+  width: 150px;
+  height: 150px;
+  background-color: #C7CEEA; /* soft blue */
+}
+
+.shape-4 {
+  width: 90px;
+  height: 90px;
+  background-color: #FFDFD3; /* soft pink */
+}
+
+@keyframes float {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+  25% {
+    transform: translate(100px, 50px) rotate(90deg) scale(1.1);
+  }
+  50% {
+    transform: translate(50px, 100px) rotate(180deg) scale(1);
+  }
+  75% {
+    transform: translate(-50px, 50px) rotate(270deg) scale(0.9);
+  }
+  100% {
+    transform: translate(0, 0) rotate(360deg) scale(1);
+  }
+}
+
+/* Make sure content is readable over the background */
+.gallery-header, .nft-card, .error-message, .empty-collection, .loading-container {
+  position: relative;
+  z-index: 1;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
+}
+
+.nft-grid {
+  position: relative;
+  z-index: 1;
+}
+

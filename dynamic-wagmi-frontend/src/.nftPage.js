@@ -59,6 +59,20 @@ export function NFTGalleryPage() {
 
   return (
     <div className="nft-gallery-page">
+      <div className="animated-background">
+        {Array.from({ length: 15 }).map((_, index) => (
+          <div 
+            key={index} 
+            className={`floating-shape shape-${index % 5}`}
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDuration: `${Math.random() * 10 + 15}s`,
+              animationDelay: `${Math.random() * 5}s`
+            }}
+          />
+        ))}
+      </div>
       <NavBar />
       <header className="gallery-header">
         <h1>Art for Sponsors</h1>
