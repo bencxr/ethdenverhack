@@ -14,6 +14,15 @@ export default function DynamicMethods({ isDarkMode }) {
   const userWallets = useUserWallets();
   const [isLoading, setIsLoading] = useState(true);
   const [result, setResult] = useState('');
+  const [isCreatingJar, setIsCreatingJar] = useState(false);
+  const [showNftForm, setShowNftForm] = useState(false);
+  const [nftFormData, setNftFormData] = useState({
+    name: '',
+    description: '',
+    age: '',
+    animal: '',
+    image: null
+  });
 
   const safeStringify = (obj) => {
     const seen = new WeakSet();
