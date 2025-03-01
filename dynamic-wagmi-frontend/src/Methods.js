@@ -3,6 +3,8 @@ import { useDynamicContext, useIsLoggedIn, useUserWallets } from "@dynamic-labs/
 import { isEthereumWallet } from '@dynamic-labs/ethereum'
 import { parseEther } from 'viem';
 import { mintNFT as mintNFTUtil } from './utils/nftMinting';
+import { createHODLJar } from './utils/hodlJarCreation';
+import { HODLJarForm } from './HODLJarForm';
 
 import './Methods.css';
 
@@ -12,6 +14,7 @@ export default function DynamicMethods({ isDarkMode }) {
   const userWallets = useUserWallets();
   const [isLoading, setIsLoading] = useState(true);
   const [result, setResult] = useState('');
+  const [isCreatingJar, setIsCreatingJar] = useState(false);
 
   const safeStringify = (obj) => {
     const seen = new WeakSet();
@@ -106,6 +109,13 @@ export default function DynamicMethods({ isDarkMode }) {
     setResult(result.message);
   }
 
+  const handleCreateHODLJar = async (formData) => {
+    setIsCreatingJar(true);
+    const result = await createHODLJar(primaryWallet, formData);
+    setResult(result.message);
+    setIsCreatingJar(false);
+  };
+
   return (
     <>
       {!isLoading && (
@@ -123,10 +133,23 @@ export default function DynamicMethods({ isDarkMode }) {
                 <button className="btn btn-primary" onClick={showBalance}>Show Balance</button>
                 <button className="btn btn-primary" onClick={sendEth}>Send 0.01 ETH</button>
                 <button className="btn btn-primary" onClick={mintNFT}>Mint NFT</button>
+                <button 
+                  className="btn btn-primary" 
+                  onClick={() => setIsCreatingJar(!isCreatingJar)}
+                >
+                  {isCreatingJar ? 'Hide Form' : 'Create New HODL Jar'}
+                </button>
               </>
             }
 
           </div>
+
+          {isCreatingJar && (
+            <div className="form-container">
+              <HODLJarForm onSubmit={handleCreateHODLJar} />
+            </div>
+          )}
+
           {result && (
             <div className="results-container">
               <pre className="results-text">
