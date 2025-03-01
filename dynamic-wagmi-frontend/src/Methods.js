@@ -10,6 +10,8 @@ import { NFTMintingForm } from './NFTMintingForm';
 import { HODLJarsList } from './HODLJarsList';
 import { fetchAllCollectionNFTs } from './utils/nftFetching';
 import { NFTGallery } from './NFTGallery';
+import { donateToHODLJar } from './utils/hodlJarDonation';
+import { DonationForm } from './DonationForm';
 
 import './Methods.css';
 
@@ -26,6 +28,7 @@ export default function DynamicMethods({ isDarkMode }) {
   const [nfts, setNfts] = useState([]);
   const [showNftGallery, setShowNftGallery] = useState(false);
   const [nftLoading, setNftLoading] = useState(false);
+  const [showDonationForm, setShowDonationForm] = useState(false);
 
   const safeStringify = (obj) => {
     const seen = new WeakSet();
@@ -58,9 +61,11 @@ export default function DynamicMethods({ isDarkMode }) {
     setIsCreatingJar(false);
     setShowJars(false);
     setShowNftGallery(false);
+    setShowDonationForm(false);
     setResult(''); // Clear the result message when switching methods
   }
 
+  /*
   function showUser() {
     hideAllForms();
     setResult(safeStringify(user));
@@ -70,6 +75,7 @@ export default function DynamicMethods({ isDarkMode }) {
     hideAllForms();
     setResult(safeStringify(userWallets));
   }
+  */
 
   async function fetchWalletClient() {
     hideAllForms();
@@ -172,6 +178,23 @@ export default function DynamicMethods({ isDarkMode }) {
     setNftLoading(false);
   }
 
+  const toggleDonationForm = () => {
+    hideAllForms();
+    setShowDonationForm(true);
+  };
+
+  const handleDonateToHODLJar = async (donationData) => {
+    if (!primaryWallet || !isEthereumWallet(primaryWallet)) return;
+
+    setResult("Processing donation...");
+    const result = await donateToHODLJar(primaryWallet, donationData);
+    setResult(result.message);
+
+    if (result.success) {
+      setShowDonationForm(false);
+    }
+  };
+
   return (
     <>
       {!isLoading && (
@@ -196,6 +219,9 @@ export default function DynamicMethods({ isDarkMode }) {
                 </button>
                 <button className="btn btn-primary" onClick={fetchHODLJars}>
                   View All HODL Jars
+                </button>
+                <button className="btn btn-primary" onClick={toggleDonationForm}>
+                  Donate to HODL Jar
                 </button>
                 <button className="btn btn-primary" onClick={fetchNFTs}>
                   View Paintings
@@ -222,6 +248,15 @@ export default function DynamicMethods({ isDarkMode }) {
           {showJars && <HODLJarsList hodlJars={hodlJars} />}
 
           {showNftGallery && <NFTGallery nfts={nfts} isLoading={nftLoading} />}
+
+          {showDonationForm && (
+            <div className="form-container">
+              <DonationForm
+                onSubmit={handleDonateToHODLJar}
+                onCancel={() => setShowDonationForm(false)}
+              />
+            </div>
+          )}
 
           {result && (
             <div className="results-container">

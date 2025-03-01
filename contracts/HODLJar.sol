@@ -86,7 +86,7 @@ contract HODLJar is ERC4626, ReentrancyGuard {
     ) public virtual override returns (uint256) {
         require(donor == address(0), "HODL jar already has a donor");
         require(
-            assets == DONATION_AMOUNT,
+            assets >= DONATION_AMOUNT,
             "Must deposit exact donation amount"
         );
 

@@ -31,6 +31,7 @@ export const HODLJarsList = ({ hodlJars }) => {
                         <p><strong>Story:</strong> {jar.story}</p>
                         <p><strong>Address:</strong> {jar.address}</p>
                         <p><strong>Foster Home:</strong> {truncateText(jar.fosterHome, 20)}</p>
+                        <p><strong>Donor:</strong> {truncateText(jar.donor, 20)}</p>
                     </div>
                 ))}
             </div>
