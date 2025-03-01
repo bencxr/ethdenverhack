@@ -1,3 +1,5 @@
+import { HODL_JAR_FACTORY_ADDRESS } from './constants';
+
 // ABI fragments needed for interacting with the contracts
 const factoryABI = [
     {
@@ -54,8 +56,6 @@ const jarABI = [
     }
 ];
 
-// Factory address - same as in the get-jars.js script
-const FACTORY_ADDRESS = "0xCA1008F2153F8f086EA89844Dc1336C63DA2f87A";
 
 export async function fetchAllHODLJars(wallet) {
     try {
@@ -68,7 +68,7 @@ export async function fetchAllHODLJars(wallet) {
 
         // Get total jars count
         const totalJars = await publicClient.readContract({
-            address: FACTORY_ADDRESS,
+            address: HODL_JAR_FACTORY_ADDRESS,
             abi: factoryABI,
             functionName: 'getTotalJars'
         });
@@ -79,7 +79,7 @@ export async function fetchAllHODLJars(wallet) {
 
         // Get all jar addresses
         const allJarAddresses = await publicClient.readContract({
-            address: FACTORY_ADDRESS,
+            address: HODL_JAR_FACTORY_ADDRESS,
             abi: factoryABI,
             functionName: 'getAllHODLJars'
         });

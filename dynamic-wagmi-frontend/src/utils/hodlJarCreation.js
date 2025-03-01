@@ -1,7 +1,5 @@
 import { isEthereumWallet } from '@dynamic-labs/ethereum';
-
-// Factory contract address
-const HODL_JAR_FACTORY_ADDRESS = "0xCA1008F2153F8f086EA89844Dc1336C63DA2f87A";
+import { HODL_JAR_FACTORY_ADDRESS } from './constants';
 
 // Add the HODLJarFactory ABI
 const HODLJarFactoryABI = [

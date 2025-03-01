@@ -5,7 +5,7 @@ export function NFTMintingForm({ onSubmit, onCancel }) {
     const [formData, setFormData] = useState({
         name: '',
         description: '',
-        age: '',
+        jarId: '',
         animal: '',
         image: null
     });
@@ -55,12 +55,12 @@ export function NFTMintingForm({ onSubmit, onCancel }) {
                     />
                 </div>
                 <div className="form-group">
-                    <label htmlFor="age">Age:</label>
+                    <label htmlFor="jarId">Jar ID:</label>
                     <input
                         type="text"
-                        id="age"
-                        name="age"
-                        value={formData.age}
+                        id="jarId"
+                        name="jarId"
+                        value={formData.jarId}
                         onChange={handleChange}
                         required
                     />

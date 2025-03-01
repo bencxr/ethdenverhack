@@ -26,7 +26,7 @@
 
 .jar-image {
     width: 100%;
-    height: 180px;
+    aspect-ratio: 1/1;
     object-fit: cover;
     border-radius: 6px;
     margin: 10px 0;

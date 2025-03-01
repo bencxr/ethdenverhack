@@ -5,7 +5,7 @@ async function main() {
   console.log("Creating HODLJars using factory...");
 
   // Factory address
-  const factoryAddress = "0xCA1008F2153F8f086EA89844Dc1336C63DA2f87A";
+  const factoryAddress = "0x21a19C7036bcD02b91951083467F06ba232f52b1";
   console.log("Using HODLJarFactory at:", factoryAddress);
 
   // Get the factory contract instance
@@ -15,16 +15,23 @@ async function main() {
   const jars = [
     {
       kidname: "Emma",
-      imageurl: "https://example.com/emma.jpg",
+      imageurl: "https://live.staticflickr.com/65535/54357472806_06aca1faf7_b.jpg",
       story: "Emma is a bright 8-year-old who loves reading and science experiments.",
-      age: 8,
+      age: 6,
       fosterHome: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8" // Replace with actual foster home address
     },
     {
-      kidname: "Liam",
-      imageurl: "https://example.com/liam.jpg",
-      story: "Liam is a creative 10-year-old who enjoys art and building things.",
-      age: 10,
+      kidname: "Tim",
+      imageurl: "https://live.staticflickr.com/65535/54357472801_27d4b0ee51_b.jpg",
+      story: "Liam is a growing boy who loves sports and playing with his friends.",
+      age: 4,
+      fosterHome: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8" // Replace with actual foster home address
+    },
+    {
+      kidname: "Jeannie",
+      imageurl: "https://live.staticflickr.com/65535/54357873385_618e38b675_b.jpg",
+      story: "Jeannie is a kind 6-year-old who loves to play with her dolls.",
+      age: 5,
       fosterHome: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8" // Replace with actual foster home address
     }
   ];

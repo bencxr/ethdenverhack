@@ -1,5 +1,6 @@
 import { encodeFunctionData } from 'viem';
 import { isEthereumWallet } from '@dynamic-labs/ethereum';
+import { PAINTING_NFT_CONTRACT_ADDRESS } from './constants';
 
 /**
  * Mints an NFT using the connected wallet
@@ -30,8 +31,8 @@ export async function mintNFT(primaryWallet, nftFormData) {
             image: imageUploadResult.ipfsUrl,
             attributes: [
                 {
-                    trait_type: "Age",
-                    value: nftFormData.age
+                    trait_type: "Jar ID",
+                    value: nftFormData.jarId
                 },
                 {
                     trait_type: "Animal",
@@ -49,9 +50,6 @@ export async function mintNFT(primaryWallet, nftFormData) {
         // Now mint the NFT with the metadata URI
         const walletClient = await primaryWallet.getWalletClient();
         const publicClient = await primaryWallet.getPublicClient();
-
-        // NFT Collection contract address
-        const contractAddress = '0x8935E25FBef320b3AE18F2C96FD61791B7CCcad7';
 
         // ABI for the mint function
         const mintABI = {
@@ -71,7 +69,7 @@ export async function mintNFT(primaryWallet, nftFormData) {
 
         // Send the transaction
         const hash = await walletClient.sendTransaction({
-            to: contractAddress,
+            to: PAINTING_NFT_CONTRACT_ADDRESS,
             data: data,
         });
 

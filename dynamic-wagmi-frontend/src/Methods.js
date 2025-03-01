@@ -8,6 +8,8 @@ import { fetchAllHODLJars } from './utils/hodlJarFetching';
 import { HODLJarForm } from './HODLJarForm';
 import { NFTMintingForm } from './NFTMintingForm';
 import { HODLJarsList } from './HODLJarsList';
+import { fetchAllCollectionNFTs } from './utils/nftFetching';
+import { NFTGallery } from './NFTGallery';
 
 import './Methods.css';
 
@@ -21,6 +23,9 @@ export default function DynamicMethods({ isDarkMode }) {
   const [showNftForm, setShowNftForm] = useState(false);
   const [hodlJars, setHodlJars] = useState([]);
   const [showJars, setShowJars] = useState(false);
+  const [nfts, setNfts] = useState([]);
+  const [showNftGallery, setShowNftGallery] = useState(false);
+  const [nftLoading, setNftLoading] = useState(false);
 
   const safeStringify = (obj) => {
     const seen = new WeakSet();
@@ -52,6 +57,7 @@ export default function DynamicMethods({ isDarkMode }) {
     setShowNftForm(false);
     setIsCreatingJar(false);
     setShowJars(false);
+    setShowNftGallery(false);
     setResult(''); // Clear the result message when switching methods
   }
 
@@ -146,6 +152,26 @@ export default function DynamicMethods({ isDarkMode }) {
     setIsCreatingJar(true);
   };
 
+  async function fetchNFTs() {
+    hideAllForms();
+    if (!primaryWallet || !isEthereumWallet(primaryWallet)) return;
+
+    setNftLoading(true);
+    setResult("Fetching your NFT paintings...");
+
+    const result = await fetchAllCollectionNFTs(primaryWallet);
+
+    if (result.success) {
+      setNfts(result.nfts);
+      setShowNftGallery(true);
+      setResult(result.message);
+    } else {
+      setResult(result.message);
+    }
+
+    setNftLoading(false);
+  }
+
   return (
     <>
       {!isLoading && (
@@ -156,6 +182,7 @@ export default function DynamicMethods({ isDarkMode }) {
 
             {primaryWallet && isEthereumWallet(primaryWallet) &&
               <>
+
                 <button className="btn btn-primary" onClick={fetchWalletClient}>Fetch Wallet Client</button>
                 <button className="btn btn-primary" onClick={sendEth}>Send 0.01 ETH</button>
 
@@ -169,6 +196,9 @@ export default function DynamicMethods({ isDarkMode }) {
                 </button>
                 <button className="btn btn-primary" onClick={fetchHODLJars}>
                   View All HODL Jars
+                </button>
+                <button className="btn btn-primary" onClick={fetchNFTs}>
+                  View Paintings
                 </button>
               </>
             }
@@ -190,6 +220,8 @@ export default function DynamicMethods({ isDarkMode }) {
           )}
 
           {showJars && <HODLJarsList hodlJars={hodlJars} />}
+
+          {showNftGallery && <NFTGallery nfts={nfts} isLoading={nftLoading} />}
 
           {result && (
             <div className="results-container">

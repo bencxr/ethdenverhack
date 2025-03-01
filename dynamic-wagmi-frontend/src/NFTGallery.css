@@ -1,0 +1,94 @@
+.nft-gallery {
+    width: 100%;
+    padding: 20px;
+}
+
+.nft-gallery h2 {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.nft-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.nft-card {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+    background-color: var(--card-bg, #fff);
+}
+
+.nft-card:hover {
+    transform: translateY(-5px);
+}
+
+.nft-image-container {
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+}
+
+.nft-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.nft-details {
+    padding: 15px;
+}
+
+.nft-details h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 18px;
+}
+
+.nft-description {
+    font-size: 14px;
+    color: var(--text-secondary, #666);
+    margin-bottom: 10px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.nft-token-id,
+.nft-contract {
+    font-size: 12px;
+    color: var(--text-secondary, #666);
+    margin: 5px 0;
+}
+
+.nft-contract a {
+    color: var(--link-color, #3498db);
+    text-decoration: none;
+}
+
+.nft-gallery-loading,
+.nft-gallery-empty {
+    text-align: center;
+    padding: 40px;
+    font-size: 18px;
+    color: var(--text-secondary, #666);
+}
+
+/* Dark mode support */
+[data-theme='dark'] .nft-card {
+    background-color: var(--card-bg, #2a2a2a);
+}
+
+[data-theme='dark'] .nft-description,
+[data-theme='dark'] .nft-token-id,
+[data-theme='dark'] .nft-contract {
+    color: var(--text-secondary, #aaa);
+}
+
+[data-theme='dark'] .nft-contract a {
+    color: var(--link-color, #61dafb);
+}
